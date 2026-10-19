@@ -40,6 +40,7 @@
   --color-surface: #f9f9ff;
   --color-surface-dim: #d2daf0;
   --color-surface-bright: #f9f9ff;
+  --color-surface-tint: #2360a2;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f1f3ff;
   --color-surface-container: #e8edff;
@@ -104,10 +105,7 @@
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-on-surface);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  @apply bg-background text-on-surface antialiased;
 }
 
 /* Tabular figures for ALL amounts */
