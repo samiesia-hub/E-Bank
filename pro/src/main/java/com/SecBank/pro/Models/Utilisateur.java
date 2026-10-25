@@ -10,13 +10,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Utilisateur {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id_Utilisateur;
     private String email;
+    @Column(unique = true)
+    private String username;
     private String password;
     private String nom;
+    private String CIN;
     private int telephone;
     private boolean actif;
     private boolean doubleauthActive;
