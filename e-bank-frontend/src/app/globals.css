@@ -61,6 +61,13 @@
   --color-divider: #e5e8ee;
   --color-surface-tint: #f8f9fa;
 
+
+  /* === Back-office admin === */
+  --color-admin-page: #f4f6fa;
+  --color-success: #2e8b57;
+  --color-danger: #d64545;
+  --color-chart-light: #8db8e8;
+
   /* font */
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
 
