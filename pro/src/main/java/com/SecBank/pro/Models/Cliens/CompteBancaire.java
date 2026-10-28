@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -27,5 +28,10 @@ public class CompteBancaire {
     private LocalDateTime dateCreation;
 
     @ManyToOne
+    @JoinColumn(name = "client_id")
     private Client client;
+    @OneToMany(mappedBy = "compte")
+    private List<Transaction> transactions;
+    @OneToMany(mappedBy = "compte")
+    private List<Releve> releves;
 }
