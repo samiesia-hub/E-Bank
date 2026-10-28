@@ -18,9 +18,9 @@ public class TicketSupport {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private StatusTicket status;
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private Priorite priorite;
     private Date dateOuverture ;
     private Date dateFermetur;

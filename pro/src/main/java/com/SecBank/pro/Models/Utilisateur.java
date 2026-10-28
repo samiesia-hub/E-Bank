@@ -3,7 +3,6 @@ package com.SecBank.pro.Models;
 import com.SecBank.pro.Models.Admin.JournalAudit;
 import com.SecBank.pro.Models.Énums.Role;
 import jakarta.persistence.*;
-import jdk.jfr.DataAmount;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
