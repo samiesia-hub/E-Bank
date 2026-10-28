@@ -1,5 +1,6 @@
 package com.SecBank.pro.Models.Cliens;
 
+import com.SecBank.pro.Models.Admin.Administrateur;
 import com.SecBank.pro.Models.Énums.StatutKYC;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,5 +22,9 @@ public class DossierKYC {
     private LocalDateTime dateSoumission;
 
     @OneToOne
+    @JoinColumn(name = "client_id",unique = true,nullable = false)
     private Client client;
+    @ManyToOne
+    @JoinColumn(name = "admin_id")
+    private Administrateur admin;
 }

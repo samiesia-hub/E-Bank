@@ -20,5 +20,6 @@ public class Releve {
     private String fichier;
 
     @ManyToOne
+    @JoinColumn(name = "compte_id")
     private CompteBancaire compte;
 }

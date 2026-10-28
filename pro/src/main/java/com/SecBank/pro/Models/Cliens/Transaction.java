@@ -24,5 +24,7 @@ public abstract class Transaction {
     private StatutTransaction statutTransaction;
 
     @ManyToOne
+    @JoinColumn(name = "compte_id")
     private CompteBancaire compte;
+
 }
