@@ -17,5 +17,6 @@ public class Beneficiaire {
     private String numeroCompte;
 
     @ManyToOne
+    @JoinColumn(name = "client_id")
     private Client client;
 }
