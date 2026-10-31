@@ -1,6 +1,7 @@
 package com.SecBank.pro.Models.Cliens;
 
 
+import com.SecBank.pro.Models.Utilisateur;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
