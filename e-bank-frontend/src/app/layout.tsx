@@ -10,7 +10,7 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Bankati — Banque en ligne",
+  title: "Ora Bank — Banque en ligne",
   description:
     "Gérez vos comptes, virements SEPA, bénéficiaires, relevés et réclamations en toute sécurité.",
 };

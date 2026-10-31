@@ -11,12 +11,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+
+import com.SecBank.pro.Models.Utilisateur;
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @PrimaryKeyJoinColumn(name="user_id")
-public class Client {
+public class Client extends Utilisateur {
 private String numeroClient;
 private String address;
 private Date dateNaissance;
@@ -26,6 +28,6 @@ private List<Reclamation> reclamations;
 private List<CompteBancaire> compteBancaires;
 @OneToMany(mappedBy = "client")
     private List<Beneficiaire> beneficiaires;
-@OneToOne(mappedBy = "client_id")
+@OneToOne(mappedBy = "client")
     private DossierKYC dossierKYC;
 }
