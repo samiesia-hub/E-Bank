@@ -1,4 +1,5 @@
-import { TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+import Image from "next/image";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 import { Carte } from "@/components/interface/Carte";
 import { formaterTendance } from "@/lib/formatage";
@@ -7,7 +8,7 @@ interface PropsCarteKpi {
     libelle: string;
     valeur: string | null; // déjà formatée ; null = pas de donnée
     tendance: number | null; // variation en % ; null = pas de donnée
-    icone: LucideIcon;
+    illustration: string; // chemin de l'image dans /public, ex. "/icones/clients.png"
     // false pour les indicateurs où une hausse est mauvaise (ex. alertes fraude)
     hausseEstPositive?: boolean;
 }
@@ -16,7 +17,7 @@ export function CarteKpi({
                              libelle,
                              valeur,
                              tendance,
-                             icone: Icone,
+                             illustration,
                              hausseEstPositive = true,
                          }: PropsCarteKpi) {
     const enHausse = tendance !== null && tendance > 0;
@@ -35,11 +36,16 @@ export function CarteKpi({
 
     return (
         <Carte className="flex flex-col gap-space-md">
-            <div className="flex items-center justify-between gap-space-sm">
+            <div className="flex items-start justify-between gap-space-sm">
                 <p className="text-label-md text-neutral-core">{libelle}</p>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-fixed text-primary-container">
-          <Icone size={20} aria-hidden="true" />
-        </span>
+                <Image
+                    src={illustration}
+                    alt=""
+                    width={96}
+                    height={96}
+                    className="shrink-0 object-contain"
+                    style={{ width: "40px", height: "40px" }}
+                />
             </div>
 
             <p className="text-headline-md font-semibold tabular-nums text-navy">

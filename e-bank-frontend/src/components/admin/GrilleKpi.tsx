@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowLeftRight, Landmark, ShieldAlert, Users } from "lucide-react";
 import { CarteKpi } from "@/components/admin/CarteKpi";
 import type { Periode } from "@/features/admin/periodes";
 import { useStatistiquesAdmin } from "@/features/admin/useStatistiquesAdmin";
@@ -17,25 +16,25 @@ export function GrilleKpi({ periode }: { periode: Periode }) {
         >
             <CarteKpi
                 libelle="Total clients"
-                icone={Users}
+                illustration="/clients.png"
                 valeur={data ? formaterNombre(data.totalClients) : null}
                 tendance={data?.tendances.totalClients ?? null}
             />
             <CarteKpi
                 libelle="Total dépôts"
-                icone={Landmark}
+                illustration="/depots.png"
                 valeur={data ? formaterMontantCompact(data.totalDepots) : null}
                 tendance={data?.tendances.totalDepots ?? null}
             />
             <CarteKpi
                 libelle="Transactions du jour"
-                icone={ArrowLeftRight}
+                illustration="/transactions.jpg"
                 valeur={data ? formaterNombre(data.transactionsDuJour) : null}
                 tendance={data?.tendances.transactionsDuJour ?? null}
             />
             <CarteKpi
                 libelle="Alertes fraude"
-                icone={ShieldAlert}
+                illustration="/alertes.png"
                 valeur={data ? formaterNombre(data.alertesFraude) : null}
                 tendance={data?.tendances.alertesFraude ?? null}
                 hausseEstPositive={false}
