@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+
+import com.SecBank.pro.Models.Utilisateur;
 @Entity
 @Data
 @AllArgsConstructor
