@@ -1,6 +1,9 @@
 package com.SecBank.pro.Services.Clients;
 
+import com.SecBank.pro.Models.Cliens.CompteBancaire;
+
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface CompteService {
 
