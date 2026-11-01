@@ -12,16 +12,16 @@ export default function Home() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#8DB8E8]" />
             Services bancaires en ligne
           </span>
-          <h1 className="mx-auto max-w-4xl font-display-hero text-display-hero-mobile text-white lg:text-display-hero">
+          <h1 className="mx-auto max-w-4xl text-balance font-display-hero text-display-hero-mobile text-white lg:text-display-hero">
             Banque en ligne : découvrez tout ce que Ora Bank peut faire pour vous
           </h1>
           <p className="mx-auto mt-space-md max-w-2xl font-body-lg text-body-lg text-[#E5E8EE]">
             Gérez vos comptes, virements SEPA, bénéficiaires et relevés — avec une sécurité de niveau bancaire (OTP, KYC, audit).
           </p>
           <div className="mt-space-xl flex flex-wrap items-center justify-center gap-space-md">
-            <Link href="/inscription" className="rounded-lg bg-primary-container px-space-lg py-2 font-label-md text-label-md text-white hover:bg-[#2C5A92]">Ouvrir un compte</Link>
-            <Link href="/connexion" className="rounded-lg bg-access-teal px-space-lg py-2 font-label-md text-label-md text-white hover:bg-[#307272]">Accès client</Link>
-            <Link href="/tableau-de-bord" className="rounded-lg border border-white/40 px-space-lg py-2 font-label-md text-label-md text-white hover:bg-white/10">Démo tableau de bord</Link>
+            <Link href="/inscription" className="w-full rounded-lg bg-primary-container px-space-lg py-2 text-center font-label-md text-label-md text-white hover:bg-[#2C5A92] sm:w-auto">Ouvrir un compte</Link>
+            <Link href="/connexion" className="w-full rounded-lg bg-access-teal px-space-lg py-2 text-center font-label-md text-label-md text-white hover:bg-[#307272] sm:w-auto">Accès client</Link>
+            <Link href="/tableau-de-bord" className="w-full rounded-lg border border-white/40 px-space-lg py-2 text-center font-label-md text-label-md text-white hover:bg-white/10 sm:w-auto">Démo tableau de bord</Link>
           </div>
         </div>
       </section>
