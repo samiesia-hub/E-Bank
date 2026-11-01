@@ -5,6 +5,7 @@ import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.Reclamation;
 import com.SecBank.pro.Models.Énums.StatusReclamation;
 import com.SecBank.pro.Repositories.Client.ClientRepo;
+
 import com.SecBank.pro.Repositories.Client.ReclamationRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Service
 public class ReclamationServiceImpl implements ReclamationService{
-    private final ClientRepo clientRepo;
+    private ClientRepo clientRepo;
     private final ReclamationRepo reclamationRepo;
     @Override
     public Reclamation creerReclamation(Long clientId, String object, String description) {
