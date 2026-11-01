@@ -2,6 +2,7 @@ package com.SecBank.pro.Models.Admin;
 
 
 import com.SecBank.pro.Models.Cliens.DossierKYC;
+import com.SecBank.pro.Models.Utilisateur;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -16,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @PrimaryKeyJoinColumn(name="user_id")
-public class Administrateur {
+public class Administrateur extends Utilisateur {
     private String matricule;
     private int niveuxAcce;
     @OneToMany(mappedBy = "admin")
