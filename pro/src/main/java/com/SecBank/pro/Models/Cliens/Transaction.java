@@ -1,6 +1,6 @@
 package com.SecBank.pro.Models.Cliens;
 
-import com.SecBank.pro.Models.Énums.StatutTransaction;
+import com.SecBank.pro.Models.Enums.StatutTransaction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

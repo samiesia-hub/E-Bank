@@ -1,7 +1,7 @@
 package com.SecBank.pro.Models.Cliens;
 
 import com.SecBank.pro.Models.Admin.Administrateur;
-import com.SecBank.pro.Models.Énums.StatutKYC;
+import com.SecBank.pro.Models.Enums.StatutKYC;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

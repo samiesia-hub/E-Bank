@@ -1,7 +1,7 @@
 package com.SecBank.pro.Models.Cliens;
 
-import com.SecBank.pro.Models.Énums.StatutCompte;
-import com.SecBank.pro.Models.Énums.TypeCompte;
+import com.SecBank.pro.Models.Enums.StatutCompte;
+import com.SecBank.pro.Models.Enums.TypeCompte;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

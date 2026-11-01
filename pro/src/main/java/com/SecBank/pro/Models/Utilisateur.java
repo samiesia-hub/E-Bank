@@ -1,7 +1,7 @@
 package com.SecBank.pro.Models;
 
 import com.SecBank.pro.Models.Admin.JournalAudit;
-import com.SecBank.pro.Models.Énums.Role;
+import com.SecBank.pro.Models.Enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

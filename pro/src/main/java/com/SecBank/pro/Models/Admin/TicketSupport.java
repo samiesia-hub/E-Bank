@@ -1,8 +1,8 @@
 package com.SecBank.pro.Models.Admin;
 
 import com.SecBank.pro.Models.Cliens.Reclamation;
-import com.SecBank.pro.Models.Énums.Priorite;
-import com.SecBank.pro.Models.Énums.StatusTicket;
+import com.SecBank.pro.Models.Enums.Priorite;
+import com.SecBank.pro.Models.Enums.StatusTicket;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

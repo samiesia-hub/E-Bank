@@ -2,7 +2,7 @@ package com.SecBank.pro.Models.Cliens;
 
 import com.SecBank.pro.Models.Admin.AgentSupport;
 import com.SecBank.pro.Models.Admin.TicketSupport;
-import com.SecBank.pro.Models.Énums.StatusReclamation;
+import com.SecBank.pro.Models.Enums.StatusReclamation;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class Reclamation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String Objet;
+    private String objet;
     private String desciprtion;
     private Date dateCreation;
     @Enumerated(value = EnumType.STRING)
