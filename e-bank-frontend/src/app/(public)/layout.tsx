@@ -11,7 +11,7 @@ export default function MiseEnPagePublique({
       <header className="bg-navy text-white">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-margin">
           <Link href="/" className="font-headline-sm text-headline-sm font-semibold">
-            Bankati
+            Ora Bank
           </Link>
           <nav className="hidden items-center gap-space-lg md:flex">
             <Link href="/services" className="font-body-sm text-body-sm text-white/80 hover:text-accent-yellow">Services</Link>

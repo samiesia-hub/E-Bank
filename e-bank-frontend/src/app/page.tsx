@@ -13,7 +13,7 @@ export default function Home() {
             Services bancaires en ligne
           </span>
           <h1 className="mx-auto max-w-4xl font-display-hero text-display-hero-mobile text-white lg:text-display-hero">
-            Banque en ligne : découvrez tout ce que Bankati peut faire pour vous
+            Banque en ligne : découvrez tout ce que Ora Bank peut faire pour vous
           </h1>
           <p className="mx-auto mt-space-md max-w-2xl font-body-lg text-body-lg text-[#E5E8EE]">
             Gérez vos comptes, virements SEPA, bénéficiaires et relevés — avec une sécurité de niveau bancaire (OTP, KYC, audit).

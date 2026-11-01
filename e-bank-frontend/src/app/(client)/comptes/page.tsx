@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function Page() {
   return (
     <main className="mx-auto max-w-[1200px] px-margin py-space-xl">
-      <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Bankati — Mes comptes</p>
+      <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Ora Bank — Mes comptes</p>
       <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">Mes comptes</h1>
       <p className="mt-space-sm max-w-2xl font-body-md text-body-md text-neutral-core">Consulter ses comptes (COURANT/EPARGNE/PRO).</p>
       <div className="mt-space-lg rounded-lg border border-divider bg-surface-container-lowest p-space-lg">

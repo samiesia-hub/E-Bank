@@ -1,0 +1,300 @@
+
+/* STRUCTURE GENERALE */
+
+.app {
+  min-height: 100vh;
+  background: #f4f6fa;
+  color: #0b1f4b;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: #0b1f4b;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+  overflow-y: auto;
+}
+
+/* LOGO */
+
+.brand {
+  padding: 30px 26px 26px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 23px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.logo svg {
+  color: #8db8e8;
+}
+
+.brandSubtitle {
+  display: block;
+  margin-top: 8px;
+  margin-left: 36px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #a9bad7;
+}
+
+/* NAVIGATION */
+
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 0;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-height: 48px;
+  padding: 12px 24px;
+  color: #c4d1e6;
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+  border-left: 4px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navItem svg {
+  flex-shrink: 0;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+}
+
+.active {
+  background: #243e6b;
+  color: #ffffff;
+  font-weight: 600;
+  border-left-color: #8db8e8;
+}
+
+/* DECONNEXION */
+
+.sidebarBottom {
+  margin-top: auto;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* BARRE SUPERIEURE */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 260px;
+  right: 0;
+  height: 72px;
+  background: #0b1f4b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 32px;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* RECHERCHE */
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(480px, 100%);
+  height: 42px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c4d1e6;
+}
+
+.search input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.search input::placeholder {
+  color: #b8c7dd;
+}
+
+/* PROFIL ET NOTIFICATIONS */
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.notificationButton {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.notificationDot {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: #f7c948;
+  border-radius: 50%;
+}
+
+.separator {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #8db8e8;
+  color: #0b1f4b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profileName {
+  white-space: nowrap;
+}
+
+/* CONTENU */
+
+.main {
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 260px;
+  padding-top: 72px;
+  background: #f4f6fa;
+}
+
+.mobileMenu {
+  display: none;
+  background: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* RESPONSIVE */
+
+/* Conserver la navigation visible sur tablette et ordinateur.
+   Le menu escamotable est réservé aux téléphones. */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .topbar {
+    left: 0;
+    padding: 0 20px;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .mobileMenu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 72px 0 0;
+    background: rgba(11, 31, 75, 0.45);
+    z-index: 55;
+    border: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .overlay {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  .search {
+    display: none;
+  }
+
+  .topbarRight {
+    margin-left: auto;
+    gap: 12px;
+  }
+
+  .profileName,
+  .profile > svg,
+  .separator {
+    display: none;
+  }
+}
