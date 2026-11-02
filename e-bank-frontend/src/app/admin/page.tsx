@@ -15,7 +15,7 @@ export default async function PageVueEnsemble({
             <div className="flex flex-wrap items-end justify-between gap-space-md">
                 <div>
                     <h1 className="text-headline-md font-semibold text-navy">
-                        Vue d'ensemble
+                        Vue d&apos;ensemble
                     </h1>
                     <p className="mt-space-xs text-body-sm text-neutral-core first-letter:uppercase">
                         {formaterDateLongue()}
