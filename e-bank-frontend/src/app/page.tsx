@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Landmark,
   ShieldCheck,
@@ -11,11 +12,10 @@ import {
   FileCheck,
   ClipboardCheck,
   CreditCard,
-  Check,
 } from "lucide-react";
 
 // Page d'accueil publique — design "Sovereign Retail Banking" (DESIGN.md).
-// Ton institutionnel, sobre : structure claire, hairlines, aucune ombre lourde.
+// Ton institutionnel, sobre : photos réelles (public/images/home), hairlines, aucune ombre lourde.
 // Contenus réutilisés de l'app (FGDR, SSL 256 bits, PCI-DSS, OTP/3D Secure) — rien d'inventé.
 
 /* ---------------- Données éditables (les textes se changent ici) ---------------- */
@@ -25,49 +25,6 @@ const pointsDeConfiance = [
   { icon: Lock, titre: "Chiffrement SSL 256 bits", texte: "Connexion chiffrée de bout en bout." },
   { icon: Landmark, titre: "Conforme PCI-DSS", texte: "Serveurs conformes pour les paiements." },
   { icon: Smartphone, titre: "Authentification forte", texte: "OTP à chaque opération sensible (3D Secure)." },
-];
-
-const offres = [
-  {
-    nom: "Compte Essentiel",
-    prix: "Gratuit",
-    prixDetail: "0 € de frais de tenue de compte",
-    fonctionnalites: [
-      "Compte courant en euros",
-      "Virements SEPA",
-      "Relevés de compte PDF",
-      "Support en ligne",
-    ],
-    cta: "Ouvrir ce compte",
-    vitrine: true,
-  },
-  {
-    nom: "Compte Premium",
-    prix: "3,99 € / mois",
-    prixDetail: "Services étendus et cartes",
-    fonctionnalites: [
-      "Tous les services du Compte Essentiel",
-      "Carte bancaire",
-      "Catégories de dépenses",
-      "Notifications d'opérations",
-      "Support prioritaire",
-    ],
-    cta: "Ouvrir ce compte",
-    vitrine: true,
-  },
-  {
-    nom: "Compte Professionnel",
-    prix: "Sur devis",
-    prixDetail: "Pour indépendants et petites structures",
-    fonctionnalites: [
-      "Compte dédié à votre activité",
-      "Virements SEPA illimités",
-      "Suivi des flux",
-      "Export comptable",
-    ],
-    cta: "Demander une ouverture",
-    vitrine: true,
-  },
 ];
 
 const argumentsPoursuivre = [
@@ -101,7 +58,7 @@ const mesuresSecurite = [
 ];
 
 const chiffres = [
-  { valeur: "0 €", libelle: "frais de tenue de compte" },
+  { valeur: "4 étapes", libelle: "assistant de virement" },
   { valeur: "24/7", libelle: "accès à vos services" },
   { valeur: "100 %", libelle: "en ligne" },
   { valeur: "256 bits", libelle: "chiffrement SSL" },
@@ -138,11 +95,6 @@ const faq = [
       "Cliquez sur « Ouvrir un compte », complétez le formulaire d'inscription, puis vérifiez le code OTP envoyé sur votre téléphone. Une vérification de votre identité (KYC) est ensuite réalisée avant l'activation du compte.",
   },
   {
-    question: "Combien coûte la tenue de compte ?",
-    reponse:
-      "Le Compte Essentiel est gratuit, sans frais de tenue de compte. Les offres Premium et Professionnel détaillent leurs tarifs dans la section Comptes ci-dessus.",
-  },
-  {
     question: "Comment fonctionnent les virements SEPA ?",
     reponse:
       "Depuis votre espace client, ajoutez un bénéficiaire puis suivez l'assistant de virement en quatre étapes. Chaque virement est confirmé par un code OTP et un reçu vous est délivré.",
@@ -165,7 +117,7 @@ const conteneur = "mx-auto w-full max-w-[1200px] px-margin";
 export default function Home() {
   return (
     <main>
-      {/* 1. HERO — promesse concrète + visuel produit CSS (aucune image externe) */}
+      {/* 1. HERO — promesse concrète + photo réelle à droite */}
       <section aria-label="Présentation" className="border-b border-divider bg-surface-tint">
         <div className={`${conteneur} grid items-center gap-space-xl py-space-2xl lg:grid-cols-2`}>
           <div>
@@ -199,43 +151,16 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Visuel produit : compte + carte (données fictives, présentées comme telles) */}
-          <div className="hidden max-w-sm justify-self-center lg:block" aria-hidden="true">
-            <div className="rounded-lg border border-divider bg-white p-space-lg">
-              <p className="font-label-sm text-label-sm uppercase tracking-wider text-neutral-core">
-                Compte courant
-              </p>
-              <p className="tabular mt-space-sm font-numeric-data text-numeric-data text-navy">
-                4 258,60 €
-              </p>
-              <p className="tabular mt-space-md font-label-md text-label-md text-neutral-core">
-                FR76 •••• •••• 1234
-              </p>
-              <div className="mt-space-md grid grid-cols-3 gap-space-md border-t border-divider pt-space-md text-center">
-                <div>
-                  <p className="tabular font-body-sm text-body-sm font-semibold text-navy">1 240,00 €</p>
-                  <p className="font-label-sm text-label-sm text-neutral-core">Dernier virement</p>
-                </div>
-                <div>
-                  <p className="tabular font-body-sm text-body-sm font-semibold text-navy">−36,50 €</p>
-                  <p className="font-label-sm text-label-sm text-neutral-core">Dépenses du jour</p>
-                </div>
-                <div>
-                  <p className="font-body-sm text-body-sm font-semibold text-access-teal">Validé</p>
-                  <p className="font-label-sm text-label-sm text-neutral-core">Statut compte</p>
-                </div>
-              </div>
-              <div className="mt-space-lg flex items-end justify-between">
-                <div className="h-16 w-28 rounded-lg bg-navy p-2 text-white">
-                  <div className="mt-1 h-2 w-2.5 rounded-sm bg-[#8DB8E8]" />
-                  <p className="mt-2 font-label-md text-label-md tabular">•••• 1234</p>
-                  <p className="font-label-sm text-label-sm text-white/60">Titulaire du compte</p>
-                </div>
-                <p className="font-label-sm text-label-sm text-neutral-core">
-                  Données fictives — exemple d&apos;affichage
-                </p>
-              </div>
-            </div>
+          {/* Visuel principal : photo réelle (locale, public/images/home) */}
+          <div className="justify-self-center lg:justify-self-end">
+            <Image
+              src="/images/home/hero-banque.jpg"
+              alt="Un client génère un virement depuis son téléphone, ordinateur posé à côté."
+              width={800}
+              height={533}
+              priority
+              className="h-64 w-auto rounded border border-divider object-cover sm:h-80 lg:h-[380px]"
+            />
           </div>
         </div>
       </section>
@@ -255,58 +180,14 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* 3. COMPTES / OFFRES — produits vitrine */}
-      <section aria-label="Comptes et offres" className={conteneur}>
-        <div className="py-space-xl">
-          <h2 className="text-headline-section-mobile font-light text-navy lg:text-headline-section">
-            Des comptes simples, aux tarifs clairs
-          </h2>
-          <p className="mt-space-sm max-w-2xl font-body-md text-body-md text-neutral-core">
-            Chaque offre précise ce qu&apos;elle inclut. Les offres sont présentées à titre de
-            vitrine en attendant la mise en service.
-          </p>
-          <div className="mt-space-xl grid gap-gutter lg:grid-cols-3">
-            {offres.map((o) => (
-              <article
-                key={o.nom}
-                className="flex flex-col rounded-lg border border-divider bg-surface-container-lowest p-space-lg"
-              >
-                <div className="flex items-start justify-between gap-space-md">
-                  <h3 className="font-headline-sm text-headline-sm font-semibold text-navy">{o.nom}</h3>
-                  <span className="shrink-0 rounded-lg bg-[#8DB8E8]/15 px-2 py-1 font-label-sm text-label-sm text-navy">
-                    Vitrine
-                  </span>
-                </div>
-                <p className="mt-space-md font-headline-md text-headline-md font-semibold text-navy">{o.prix}</p>
-                <p className="font-body-sm text-body-sm text-neutral-core">{o.prixDetail}</p>
-                <ul className="mt-space-lg flex-1 space-y-space-sm">
-                  {o.fonctionnalites.map((f) => (
-                    <li key={f} className="flex items-start gap-space-sm font-body-md text-body-md text-neutral-core">
-                      <Check size={16} className="mt-1 shrink-0 text-access-teal" aria-hidden="true" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/inscription"
-                  className="mt-space-lg inline-flex h-10 w-full items-center justify-center rounded-lg border border-primary-container bg-transparent px-space-lg font-label-md text-label-md text-primary-container hover:bg-surface-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container"
-                >
-                  {o.cta}
-                </Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. POURQUOI ORA BANK */}
-      <section aria-label="Pourquoi Ora Bank" className="border-y border-divider bg-surface-tint">
-        <div className={conteneur}>
-          <div className="py-space-xl">
+      {/* 3. POURQUOI ORA BANK — arguments + photo des paiements */}
+      <section aria-label="Pourquoi Ora Bank" className="border-b border-divider">
+        <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-[1.2fr_1fr]`}>
+          <div>
             <h2 className="text-headline-section-mobile font-light text-navy lg:text-headline-section">
               Pourquoi Ora Bank
             </h2>
-            <div className="mt-space-xl grid gap-gutter sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-space-xl grid gap-gutter sm:grid-cols-2">
               {argumentsPoursuivre.map((a) => (
                 <div key={a.titre}>
                   <a.icon size={24} className="text-primary-container" aria-hidden="true" />
@@ -316,20 +197,52 @@ export default function Home() {
               ))}
             </div>
           </div>
+          <Image
+            src="/images/home/paiement-mobile.jpg"
+            alt="Paiement sans contact confirmé avec un téléphone, à la caisse d'un commerce."
+            width={560}
+            height={373}
+            sizes="(max-width: 1023px) 100vw, 560px"
+            className="h-64 w-full rounded border border-divider object-cover lg:h-72"
+          />
+        </div>
+      </section>
+
+      {/* 4. ACCOMPAGNEMENT — un conseiller à vos côtés */}
+      <section aria-label="Accompagnement" className="border-y border-divider bg-surface-tint">
+        <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-2`}>
+          <Image
+            src="/images/home/conseiller.jpg"
+            alt="Une conseillère présente des informations à un client, à son bureau."
+            width={560}
+            height={373}
+            sizes="(max-width: 1023px) 100vw, 560px"
+            className="h-64 w-full rounded border border-divider object-cover lg:h-72"
+          />
+          <div>
+            <h2 className="text-headline-section-mobile font-light text-navy lg:text-headline-section">
+              Un conseiller à vos côtés
+            </h2>
+            <p className="mt-space-sm max-w-xl font-body-md text-body-md text-neutral-core">
+              Une question sur un virement, une carte ou un document ? Ouvrez un ticket depuis
+              votre espace : nos équipes suivent chaque demande jusqu&apos;à sa réponse, et chaque
+              réclamation a un suivi visible.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* 5. SÉCURITÉ — bande navy */}
       <section aria-label="Sécurité" className="bg-navy text-white">
-        <div className={conteneur}>
-          <div className="py-space-xl">
+        <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-[1.35fr_1fr]`}>
+          <div>
             <h2 className="text-headline-section-mobile font-light text-white lg:text-headline-section">
               La sécurité au centre du service
             </h2>
             <p className="mt-space-sm max-w-2xl font-body-md text-body-md text-[#E5E8EE]">
               Chaque étape sensible est contrôlée et documentée, de l&apos;ouverture du compte jusqu&apos;aux virements.
             </p>
-            <div className="mt-space-xl grid gap-gutter sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-space-xl grid gap-gutter sm:grid-cols-2">
               {mesuresSecurite.map((m) => (
                 <div key={m.titre} className="rounded-lg border border-white/20 p-space-lg">
                   <m.icon size={24} className="text-[#8DB8E8]" aria-hidden="true" />
@@ -345,6 +258,14 @@ export default function Home() {
               Consulter le centre de sécurité
             </Link>
           </div>
+          <Image
+            src="/images/home/securite-carte.jpg"
+            alt="Une carte bancaire tenue en main devant un ordinateur portable, au moment d'un paiement en ligne."
+            width={560}
+            height={373}
+            sizes="(max-width: 1023px) 100vw, 560px"
+            className="h-64 w-full rounded border border-white/25 object-cover lg:h-72"
+          />
         </div>
       </section>
 
