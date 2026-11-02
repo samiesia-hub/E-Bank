@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
 import { BASE_API } from "@/lib/client-api";
+import { routeSelonRole } from "@/features/authentification/route-apres-connexion";
 
 // Mode démonstration : ce compte fonctionne même sans backend.
 const COMPTE_DEMO = { email: "demo@bankati.ma", motDePasse: "Bankati2026!" };
@@ -64,12 +65,15 @@ export default function PageConnexion() {
         return;
       }
 
-      router.replace("/");
+      // Le backend a posé le cookie httpOnly "session" ; le rôle du compte décide de la page.
+      const corps = await reponse.json().catch(() => null);
+      router.replace(routeSelonRole(corps?.role));
       router.refresh();
     } catch {
-      // Backend éteint : on accepte les comptes de démonstration.
+      // Backend éteint : on accepte les comptes de démonstration (client uniquement ;
+      // sans cookie, le proxy renvoie à /connexion en production).
       if (trouverCompteDemo(email, motDePasse)) {
-        router.replace("/");
+        router.replace(routeSelonRole("CLIENT"));
         router.refresh();
         return;
       }
