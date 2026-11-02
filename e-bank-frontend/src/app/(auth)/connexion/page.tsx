@@ -70,10 +70,10 @@ export default function PageConnexion() {
       router.replace(routeSelonRole(corps?.role));
       router.refresh();
     } catch {
-      // Backend éteint : on accepte les comptes de démonstration (client uniquement ;
-      // sans cookie, le proxy renvoie à /connexion en production).
+      // Backend éteint : on accepte les comptes de démonstration — retour à l'accueil,
+      // car sans cookie le proxy renvoie /tableau-de-bord vers /connexion.
       if (trouverCompteDemo(email, motDePasse)) {
-        router.replace(routeSelonRole("CLIENT"));
+        router.replace("/");
         router.refresh();
         return;
       }
