@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
@@ -24,6 +26,8 @@ public class Client extends Utilisateur {
     private String numeroClient;
     private String address;
     private Date dateNaissance;
+    // Boucle JSON infinie reclamation -> client -> reclamations : on casse la boucle.
+    @JsonIgnore
     @OneToMany(mappedBy = "client")
     private List<Reclamation> reclamations;
     @OneToMany(mappedBy = "client")
