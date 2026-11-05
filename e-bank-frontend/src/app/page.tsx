@@ -57,6 +57,13 @@ const mesuresSecurite = [
   { icon: CreditCard, titre: "Opposition carte", texte: "Blocage immédiat de votre carte depuis votre espace." },
 ];
 
+const applicationMobile = [
+  { icon: Smartphone, titre: "Solde en temps réel", texte: "Vos comptes et vos dernières opérations, dès l'ouverture." },
+  { icon: Zap, titre: "Virements SEPA", texte: "Bénéficiaires enregistrés et confirmation par code OTP." },
+  { icon: CreditCard, titre: "Opposition immédiate", texte: "Bloquez votre carte depuis l'application, sans appel." },
+  { icon: ShieldCheck, titre: "Connexion protégée", texte: "Authentification forte à chaque accès à vos comptes." },
+];
+
 const chiffres = [
   { valeur: "4 étapes", libelle: "assistant de virement" },
   { valeur: "24/7", libelle: "accès à vos services" },
@@ -155,7 +162,7 @@ export default function Home() {
           <div className="justify-self-center lg:justify-self-end">
             <Image
               src="/images/home/hero-banque.jpg"
-              alt="Un client génère un virement depuis son téléphone, ordinateur posé à côté."
+              alt="Un client consulte son compte sur son téléphone, sa carte bancaire à la main."
               width={800}
               height={533}
               priority
@@ -198,8 +205,8 @@ export default function Home() {
             </div>
           </div>
           <Image
-            src="/images/home/paiement-mobile.jpg"
-            alt="Paiement sans contact confirmé avec un téléphone, à la caisse d'un commerce."
+            src="/images/home/paiement-terminal.jpg"
+            alt="Paiement sans contact réglé par carte sur un terminal de paiement."
             width={560}
             height={373}
             sizes="(max-width: 1023px) 100vw, 560px"
@@ -208,12 +215,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. ACCOMPAGNEMENT — un conseiller à vos côtés */}
+      {/* 4. APPLICATION MOBILE — la banque dans la poche */}
+      <section aria-label="Application mobile" className="border-b border-divider bg-surface-tint">
+        <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-[auto_1fr]`}>
+          <div className="justify-self-center lg:justify-self-start">
+            <Image
+              src="/images/home/app-mobile.jpg"
+              alt="Écran de l'application bancaire : solde du compte et dernières opérations."
+              width={360}
+              height={480}
+              sizes="(max-width: 1023px) 60vw, 360px"
+              className="h-72 w-auto rounded border border-divider object-cover shadow-none sm:h-80 lg:h-[420px]"
+            />
+          </div>
+          <div>
+            <h2 className="text-headline-section-mobile font-light text-navy lg:text-headline-section">
+              Votre banque dans votre poche
+            </h2>
+            <p className="mt-space-sm max-w-xl font-body-md text-body-md text-neutral-core">
+              L&apos;application reprend les services de votre espace client : consultez vos soldes,
+              envoyez un virement et bloquez votre carte, où que vous soyez.
+            </p>
+            <ul className="mt-space-xl grid gap-space-md sm:grid-cols-2">
+              {applicationMobile.map((a) => (
+                <li key={a.titre} className="flex items-start gap-space-md">
+                  <a.icon size={20} className="mt-1 shrink-0 text-primary-container" aria-hidden="true" />
+                  <div>
+                    <p className="font-label-md text-label-md font-semibold text-navy">{a.titre}</p>
+                    <p className="mt-space-xs font-body-sm text-body-sm text-neutral-core">{a.texte}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. ACCOMPAGNEMENT — un conseiller à vos côtés */}
       <section aria-label="Accompagnement" className="border-y border-divider bg-surface-tint">
         <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-2`}>
           <Image
-            src="/images/home/conseiller.jpg"
-            alt="Une conseillère présente des informations à un client, à son bureau."
+            src="/images/home/conseiller-agence.jpg"
+            alt="Un conseiller accompagne un client à son bureau, ordinateur et documents ouverts."
             width={560}
             height={373}
             sizes="(max-width: 1023px) 100vw, 560px"
@@ -259,8 +302,8 @@ export default function Home() {
             </Link>
           </div>
           <Image
-            src="/images/home/securite-carte.jpg"
-            alt="Une carte bancaire tenue en main devant un ordinateur portable, au moment d'un paiement en ligne."
+            src="/images/home/securite-terminal.jpg"
+            alt="Lecteur de carte bancaire d'un distributeur automatique."
             width={560}
             height={373}
             sizes="(max-width: 1023px) 100vw, 560px"
