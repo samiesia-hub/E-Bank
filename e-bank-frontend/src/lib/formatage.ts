@@ -94,3 +94,15 @@ export function formaterTendance(
   }).format(pourcentage);
   return `${texte} %`;
 }
+/** "31/10/2026 14:30" — date et heure lisibles en français. */
+export function formaterDateHeure(dateIso: string, locale = "fr-FR"): string {
+  const d = new Date(dateIso);
+  if (Number.isNaN(d.getTime())) return dateIso;
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
