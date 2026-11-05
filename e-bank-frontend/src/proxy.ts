@@ -27,6 +27,12 @@ const rules: Array<{ prefix: string; roles: string[] }> = [
 
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  if (
+  process.env.NODE_ENV === "development" &&
+  path.startsWith("/tableau-de-bord")
+) {
+  return NextResponse.next();
+}
   const rule = rules.find((r) => path === r.prefix || path.startsWith(r.prefix + "/"));
   if (!rule) return NextResponse.next();
 

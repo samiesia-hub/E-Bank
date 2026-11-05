@@ -1,8 +1,8 @@
 package com.SecBank.pro.Models.Admin;
 
 import com.SecBank.pro.Models.Cliens.Reclamation;
-import com.SecBank.pro.Models.Énums.Priorite;
-import com.SecBank.pro.Models.Énums.StatusTicket;
+import com.SecBank.pro.Models.Enums.Priorite;
+import com.SecBank.pro.Models.Enums.StatusTicket;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,9 +18,9 @@ public class TicketSupport {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private StatusTicket status;
-    @Enumerated(value = EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private Priorite priorite;
     private Date dateOuverture ;
     private Date dateFermetur;

@@ -2,11 +2,11 @@ package com.SecBank.pro.Services.Client;
 
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.Reclamation;
-import com.SecBank.pro.Models.Énums.StatusReclamation;
+import com.SecBank.pro.Models.Enums.StatusReclamation;
 import com.SecBank.pro.Repositories.Client.ClientRepo;
 import com.SecBank.pro.Repositories.Client.ReclamationRepo;
 import com.SecBank.pro.Services.Clients.ReclamationServiceImpl;
-import jakarta.persistence.EntityNotFoundException;
+import com.SecBank.pro.Exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,7 +80,7 @@ class ReclamationServiceTest {
                 .thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(EntityNotFoundException.class, () ->
+        assertThrows(ResourceNotFoundException.class, () ->
                 reclamationService.creerReclamation(
                         clientId,
                         "Problème",
@@ -122,7 +122,7 @@ class ReclamationServiceTest {
                 .thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(EntityNotFoundException.class, () ->
+        assertThrows(ResourceNotFoundException.class, () ->
                 reclamationService.suivreReclamation(reclamationId)
         );
 

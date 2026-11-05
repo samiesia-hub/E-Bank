@@ -1,5 +1,6 @@
 package com.SecBank.pro.Services.Clients;
 
+
 import com.SecBank.pro.Models.Cliens.Reclamation;
 
 public interface ReclamationService {

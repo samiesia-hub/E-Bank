@@ -5,6 +5,9 @@
  */
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
 
+/** Base URL for calls that must not use the shared 401 redirect (login, register). */
+export const BASE_API = BASE_URL;
+
 export class ErreurApi extends Error {
   status: number;
   constructor(status: number, message: string) {
