@@ -1,5 +1,6 @@
 package com.SecBank.pro.Models.Cliens;
 
+import com.SecBank.pro.Models.Enums.SensTransaction;
 import com.SecBank.pro.Models.Enums.StatutTransaction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,8 @@ public abstract class Transaction {
     private Long id;
     private LocalDateTime dateTransaction;
     private BigDecimal montant;
+    @Enumerated(EnumType.STRING)
+    private SensTransaction sens;
     @Enumerated(EnumType.STRING)
     private StatutTransaction statutTransaction;
 

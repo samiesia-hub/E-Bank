@@ -1,4 +1,7 @@
 package com.SecBank.pro.Repositories.Admin;
 
-public interface JournalAuditRepository {
+import com.SecBank.pro.Models.Admin.JournalAudit;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface JournalAuditRepository extends JpaRepository<JournalAudit, Long> {
 }

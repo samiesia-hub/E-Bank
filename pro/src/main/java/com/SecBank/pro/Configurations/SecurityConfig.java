@@ -70,6 +70,10 @@ public class SecurityConfig {
                         // Sans cela, une erreur (404, 500...) repart en 401 : la page /error
                         // est protégée et le filtre JWT ignore les dispatches d'erreur.
                         .requestMatchers("/error").permitAll()
+                        // Routes d'administration : le token doit porter le role ADMIN.
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Espace client : le token doit porter le role CLIENT.
+                        .requestMatchers("/api/client/**").hasRole("CLIENT")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

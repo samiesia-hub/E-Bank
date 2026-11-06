@@ -19,7 +19,14 @@ public class CompteBancaire {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @Column(unique = true, length = 13)
     private String numeroCompte;
+    // RIB marocain sur 24 chiffres : banque(3) + ville(3) + agence(3) + compte(13) + cle(2).
+    @Column(unique = true, length = 24)
+    private String rib;
+    // Devise ISO 4217 du compte (MAD pour la banque).
+    private String devise;
+    @Column(precision = 19, scale = 2)
     private BigDecimal solde;
     @Enumerated(EnumType.STRING)
     private TypeCompte typeCompte;
