@@ -52,6 +52,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Le renvoi ASYNC (fin d'un flux type StreamingResponseBody) repasse dans la
+     * chaine de securite : sans re-authentification il est refuse apres commit,
+     * ce qui tronque la reponse (ERR_INCOMPLETE_CHUNKED_ENCODING cote navigateur).
+     */
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
     private String lireToken(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith(PREFIXE)) {

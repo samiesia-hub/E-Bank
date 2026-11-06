@@ -10,10 +10,12 @@ import com.SecBank.pro.Models.Enums.SensTransaction;
 import com.SecBank.pro.Models.Enums.StatutTransaction;
 import com.SecBank.pro.Models.Enums.TypeCompte;
 import com.SecBank.pro.Services.Clients.TransactionService;
+import com.SecBank.pro.Services.CsvExportService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,21 +25,30 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,6 +60,9 @@ class TransactionControllerTest {
 
     @MockitoBean
     private TransactionService transactionService;
+
+    @MockitoBean
+    private CsvExportService csvExportService;
 
     @Test
     void transactionsDuCompte_pageParDefautTrieesParDateDesc() throws Exception {
@@ -111,6 +125,20 @@ class TransactionControllerTest {
     }
 
     @Test
+    void supervisionAdmin_exposeEmetteurEtDestinataire() throws Exception {
+        when(transactionService.rechercherToutesLesTransactions(
+                isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(pageDeTransactions());
+
+        mockMvc.perform(get("/api/admin/transactions")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contenu[0].emetteur").value("Jean Dupont"))
+                .andExpect(jsonPath("$.contenu[0].destinataire").value("Proprietaire"))
+                .andExpect(jsonPath("$.contenu[0].devise").value("MAD"));
+    }
+
+    @Test
     void supervisionAdmin_listeToutesLesTransactions() throws Exception {
         when(transactionService.rechercherToutesLesTransactions(
                 isNull(), isNull(), any(LocalDate.class), isNull(), isNull(), any(Pageable.class)))
@@ -122,6 +150,50 @@ class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contenu[0].id").value(5))
                 .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    @Test
+    void exportCsv_retourneUnFichierTelechargeableAvecLesFiltres() throws Exception {
+        mockMvc.perform(get("/api/admin/transactions/export-csv")
+                        .param("du", "2026-01-01")
+                        .param("sens", "DEBIT")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("attachment")))
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString(".csv")))
+                .andExpect(content().contentTypeCompatibleWith("text/csv"));
+    }
+
+    @Test
+    void exportCsv_leCorpsEstUnFluxCsvAvecToutesLesColonnes() throws Exception {
+        doAnswer(invocation -> {
+            OutputStream flux = invocation.getArgument(0);
+            flux.write(("\uFEFFDate;Emetteur;Destinataire;Montant;Devise;Statut;Sens;Compte;Libelle\r\n"
+                    + "05/01/2026 10:00:00;Jean Dupont;Proprietaire;120.00;MAD;EXECUTEE;DEBIT;"
+                    + "0000000000010;Loyer\r\n").getBytes(StandardCharsets.UTF_8));
+            return null;
+        }).when(csvExportService).exporter(any(), any(), any(), any(), any(), any());
+
+        MvcResult resultat = mockMvc.perform(get("/api/admin/transactions/export-csv")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(resultat))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(
+                        "Date;Emetteur;Destinataire;Montant;Devise;Statut;Sens;Compte;Libelle")))
+                .andExpect(content().string(containsString(
+                        "05/01/2026 10:00:00;Jean Dupont;Proprietaire;120.00;MAD;EXECUTEE;DEBIT;")));
+    }
+
+    @Test
+    void exportCsv_periodeIncoherente_repond400() throws Exception {
+        mockMvc.perform(get("/api/admin/transactions/export-csv")
+                        .param("du", "2026-02-01")
+                        .param("au", "2026-01-01")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -150,11 +222,13 @@ class TransactionControllerTest {
         Client client = new Client();
         client.setId_Utilisateur(1L);
         client.setEmail("jean@example.com");
+        client.setNom("Jean Dupont");
 
         CompteBancaire compte = new CompteBancaire();
         compte.setId(10L);
         compte.setNumeroCompte("0000000000010");
         compte.setTypeCompte(TypeCompte.COURANT);
+        compte.setDevise("MAD");
         compte.setClient(client);
 
         Virement virement = new Virement();
@@ -164,6 +238,7 @@ class TransactionControllerTest {
         virement.setStatutTransaction(StatutTransaction.EXECUTEE);
         virement.setDateTransaction(LocalDateTime.of(2026, 1, 5, 10, 0));
         virement.setMotif("Loyer");
+        virement.setBeneficiaire("Proprietaire");
         virement.setCompte(compte);
 
         return new PageImpl<>(List.of(virement), PageRequest.of(0, 10), 1);

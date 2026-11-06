@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -67,7 +68,7 @@ class CompteControllerTest {
 
     @Test
     void creationCompte_adminCreeUnCompteActifEnMAD() throws Exception {
-        when(compteService.creerCompte(1L, TypeCompte.COURANT, null)).thenReturn(compte());
+        when(compteService.creerCompte(1L, TypeCompte.COURANT, null, null)).thenReturn(compte());
 
         mockMvc.perform(post("/api/admin/comptes")
                         .principal(principal("admin@example.com", "ROLE_ADMIN"))
@@ -82,7 +83,7 @@ class CompteControllerTest {
     @Test
     void creationCompte_ribInvalide_retourne400AvecLeMotifExact() throws Exception {
         String rib = "011780001000000000001046";
-        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib)))
+        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib), any()))
                 .thenThrow(new RibInvalideException(IbanGenerator.MOTIF_RIB_CLE));
 
         mockMvc.perform(post("/api/admin/comptes")
@@ -96,7 +97,7 @@ class CompteControllerTest {
     @Test
     void creationCompte_ribDejaUtilise_retourne409() throws Exception {
         String rib = "011780001000000000001045";
-        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib)))
+        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib), any()))
                 .thenThrow(new RibDejaUtiliseException("Un compte avec le RIB " + rib + " existe deja"));
 
         mockMvc.perform(post("/api/admin/comptes")
@@ -105,6 +106,49 @@ class CompteControllerTest {
                         .content("{\"clientId\":1,\"typeCompte\":\"COURANT\",\"rib\":\"" + rib + "\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Un compte avec le RIB " + rib + " existe deja"));
+    }
+
+    @Test
+    void ouvertureAvecSoldeInitial500_stockeLeSoldeEtLeRib() throws Exception {
+        CompteBancaire compte = compte();
+        compte.setSolde(new BigDecimal("500.00"));
+        when(compteService.creerCompte(eq(1L), eq(TypeCompte.COURANT), eq(null), eq(new BigDecimal("500"))))
+                .thenReturn(compte);
+
+        mockMvc.perform(post("/api/admin/comptes")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"clientId\":1,\"typeCompte\":\"COURANT\",\"soldeInitial\":500}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.solde").value(500.00))
+                .andExpect(jsonPath("$.statutCompte").value("ACTIF"))
+                .andExpect(jsonPath("$.rib").isNotEmpty());
+    }
+
+    @Test
+    void listeAdmin_retourneTousLesComptesAvecLeurTitulaire() throws Exception {
+        when(compteService.listerTousLesComptes()).thenReturn(List.of(compte()));
+
+        mockMvc.perform(get("/api/admin/comptes").principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].numeroCompte").value("0000000000010"))
+                .andExpect(jsonPath("$[0].clientEmail").value("jean@example.com"))
+                .andExpect(jsonPath("$[0].statutCompte").value("ACTIF"));
+    }
+
+    @Test
+    void gelerCompte_retourneLeCompteBloque() throws Exception {
+        CompteBancaire compte = compte();
+        compte.setStatutCompte(StatutCompte.BLOQUE);
+        when(compteService.changerStatut(10L, StatutCompte.BLOQUE)).thenReturn(compte);
+
+        mockMvc.perform(patch("/api/admin/comptes/10/statut")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"statut\":\"BLOQUE\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statutCompte").value("BLOQUE"));
     }
 
     private static Principal principal(String email, String role) {

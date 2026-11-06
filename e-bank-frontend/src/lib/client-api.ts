@@ -42,5 +42,25 @@ export async function appelApi<T>(path: string, init?: RequestInit): Promise<T> 
   return (await res.json()) as T;
 }
 
+/**
+ * Message lisible d'une erreur API : le backend renvoie {"message": "..."}
+ * pour les refus metier, appelApi expose le corps brut.
+ */
+export function messageErreurApi(erreur: unknown): string {
+  if (erreur instanceof ErreurApi) {
+    try {
+      const corps: unknown = JSON.parse(erreur.message);
+      if (corps && typeof corps === "object" && "message" in corps) {
+        const message = (corps as { message?: unknown }).message;
+        if (typeof message === "string" && message.length > 0) return message;
+      }
+    } catch {
+      // Corps non JSON : on garde le texte brut.
+    }
+    return erreur.message;
+  }
+  return erreur instanceof Error ? erreur.message : "Une erreur est survenue, veuillez réessayer.";
+}
+
 // Alias anglais pour compatibilité
 export { ErreurApi as ApiError, appelApi as api };

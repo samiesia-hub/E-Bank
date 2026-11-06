@@ -15,6 +15,9 @@ public interface CompteBancaireRepository extends JpaRepository<CompteBancaire, 
     @Query("SELECT c FROM CompteBancaire c WHERE c.client.id_Utilisateur = :clientId")
     List<CompteBancaire> findByClientId(@Param("clientId") Long clientId);
 
+    /** Liste d'administration : comptes les plus recents d'abord. */
+    List<CompteBancaire> findAllByOrderByDateCreationDesc();
+
     boolean existsByNumeroCompte(String numeroCompte);
 
     boolean existsByRib(String rib);

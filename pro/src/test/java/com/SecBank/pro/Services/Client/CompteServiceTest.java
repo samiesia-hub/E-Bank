@@ -1,5 +1,7 @@
 package com.SecBank.pro.Services.Client;
 
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
+import com.SecBank.pro.Exceptions.OperationRefuseeException;
 import com.SecBank.pro.Exceptions.ResourceNotFoundException;
 import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
 import com.SecBank.pro.Exceptions.RibInvalideException;
@@ -335,5 +337,106 @@ class CompteServiceTest {
         assertTrue(IbanGenerator.estValide(premier.getRib()));
         assertTrue(IbanGenerator.estValide(second.getRib()));
         assertEquals(premier.getRib().substring(9, 22), premier.getNumeroCompte());
+    }
+
+    @Test
+    void creerCompte_soldeInitial500_estApplique() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        when(compteBancaireRepository.existsByNumeroCompte(anyString())).thenReturn(false);
+        when(compteBancaireRepository.existsByRib(anyString())).thenReturn(false);
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        CompteBancaire cree = compteService.creerCompte(1L, TypeCompte.COURANT, null, new BigDecimal("500"));
+
+        // Assert
+        assertEquals(new BigDecimal("500.00"), cree.getSolde());
+        assertEquals(StatutCompte.ACTIF, cree.getStatutCompte());
+        assertNotNull(cree.getRib());
+    }
+
+    @Test
+    void creerCompte_soldeInitialNegatif_refuse() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+
+        // Act + Assert
+        DonneeInvalideException refus = assertThrows(DonneeInvalideException.class, () ->
+                compteService.creerCompte(1L, TypeCompte.COURANT, null, new BigDecimal("-1")));
+        assertEquals("Le solde initial ne peut pas etre negatif", refus.getMessage());
+
+        verify(compteBancaireRepository, never()).saveAndFlush(any(CompteBancaire.class));
+    }
+
+    @Test
+    void changerStatut_gelePuisReactiveLeCompte() {
+
+        // Arrange
+        compte.setStatutCompte(StatutCompte.ACTIF);
+        when(compteBancaireRepository.findById(10L)).thenReturn(Optional.of(compte));
+        when(compteBancaireRepository.save(any(CompteBancaire.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act : gel
+        CompteBancaire gele = compteService.changerStatut(10L, StatutCompte.BLOQUE);
+
+        // Assert
+        assertEquals(StatutCompte.BLOQUE, gele.getStatutCompte());
+
+        // Act : reactivation
+        CompteBancaire reactive = compteService.changerStatut(10L, StatutCompte.ACTIF);
+        assertEquals(StatutCompte.ACTIF, reactive.getStatutCompte());
+    }
+
+    @Test
+    void changerStatut_compteCloture_refuse() {
+
+        // Arrange
+        compte.setStatutCompte(StatutCompte.CLOTURE);
+        when(compteBancaireRepository.findById(10L)).thenReturn(Optional.of(compte));
+
+        // Act + Assert
+        assertThrows(DonneeInvalideException.class,
+                () -> compteService.changerStatut(10L, StatutCompte.ACTIF));
+        assertThrows(DonneeInvalideException.class,
+                () -> compteService.changerStatut(10L, StatutCompte.CLOTURE));
+        assertThrows(DonneeInvalideException.class,
+                () -> compteService.changerStatut(10L, null));
+
+        verify(compteBancaireRepository, never()).save(any(CompteBancaire.class));
+    }
+
+    @Test
+    void listerTousLesComptes_renvoieLesComptesDeLaBanque() {
+
+        // Arrange
+        when(compteBancaireRepository.findAllByOrderByDateCreationDesc()).thenReturn(List.of(compte));
+
+        // Act
+        List<CompteBancaire> comptes = compteService.listerTousLesComptes();
+
+        // Assert
+        assertEquals(1, comptes.size());
+        assertEquals(compte, comptes.get(0));
+    }
+
+    @Test
+    void debiter_surCompteGele_refuseToutMouvementSortant() {
+
+        // Arrange : un virement passe par debiter, il doit echouer sur un compte gele
+        compte.setStatutCompte(StatutCompte.BLOQUE);
+        when(compteBancaireRepository.findById(10L)).thenReturn(Optional.of(compte));
+
+        // Act + Assert
+        OperationRefuseeException refus = assertThrows(OperationRefuseeException.class,
+                () -> compteService.debiter(10L, new BigDecimal("100.00")));
+        assertTrue(refus.getMessage().contains("n'est pas actif"), refus.getMessage());
+
+        verify(compteBancaireRepository, never())
+                .decrementerSoldeSiSoldeSuffisant(any(), any(), any());
     }
 }

@@ -5,12 +5,16 @@ import com.SecBank.pro.Dtos.TransactionResponse;
 import com.SecBank.pro.Models.Cliens.Transaction;
 import com.SecBank.pro.Models.Enums.SensTransaction;
 import com.SecBank.pro.Services.Clients.TransactionService;
+import com.SecBank.pro.Services.CsvExportService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +22,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 /**
@@ -32,10 +38,14 @@ public class TransactionController {
             .and(Sort.by(Sort.Direction.DESC, "id"));
     private static final int TAILLE_MAX = 100;
 
-    private final TransactionService transactionService;
+    private static final MediaType TYPE_CSV = new MediaType("text", "csv", StandardCharsets.UTF_8);
 
-    public TransactionController(TransactionService transactionService) {
+    private final TransactionService transactionService;
+    private final CsvExportService csvExportService;
+
+    public TransactionController(TransactionService transactionService, CsvExportService csvExportService) {
         this.transactionService = transactionService;
+        this.csvExportService = csvExportService;
     }
 
     /** Historique d'un compte : le proprietaire uniquement, 403 sinon. */
@@ -90,6 +100,30 @@ public class TransactionController {
                 clientId, compteId, du, au, sens, pageable(page, size));
 
         return ResponseEntity.ok(PageResponse.depuis(transactions.map(TransactionResponse::depuis)));
+    }
+
+    /**
+     * Export CSV de la supervision : memes filtres que la liste paginee, sans pagination.
+     * Le corps est ecrit en flux, avec un nom de fichier date.
+     */
+    @GetMapping("/api/admin/transactions/export-csv")
+    public ResponseEntity<StreamingResponseBody> exporterTransactionsCsv(
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) Long compteId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
+            @RequestParam(required = false) SensTransaction sens) {
+
+        verifierPeriode(du, au);
+
+        StreamingResponseBody corps = flux -> csvExportService.exporter(flux, clientId, compteId, du, au, sens);
+        String nomFichier = "transactions-" + LocalDate.now() + ".csv";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(nomFichier).build().toString())
+                .contentType(TYPE_CSV)
+                .body(corps);
     }
 
     private static Pageable pageable(int page, int size) {

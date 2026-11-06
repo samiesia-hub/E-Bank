@@ -1,5 +1,6 @@
 package com.SecBank.pro.Conrollers;
 
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
 import com.SecBank.pro.Exceptions.OperationRefuseeException;
 import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
 import com.SecBank.pro.Exceptions.RibInvalideException;
@@ -19,6 +20,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(OperationRefuseeException.class)
     public ResponseEntity<Map<String, String>> operationRefusee(OperationRefuseeException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", exception.getMessage()));
+    }
+
+    @ExceptionHandler(DonneeInvalideException.class)
+    public ResponseEntity<Map<String, String>> donneeInvalide(DonneeInvalideException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", exception.getMessage()));
     }
 

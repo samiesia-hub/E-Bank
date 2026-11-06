@@ -18,7 +18,9 @@ public record CompteResponse(
         String typeCompte,
         String statutCompte,
         LocalDateTime dateCreation,
-        Long clientId
+        Long clientId,
+        String clientEmail,
+        String clientNom
 ) {
     public static CompteResponse depuis(CompteBancaire compte) {
         return new CompteResponse(
@@ -30,7 +32,9 @@ public record CompteResponse(
                 compte.getTypeCompte() == null ? null : compte.getTypeCompte().name(),
                 compte.getStatutCompte() == null ? null : compte.getStatutCompte().name(),
                 compte.getDateCreation(),
-                compte.getClient() == null ? null : compte.getClient().getId_Utilisateur()
+                compte.getClient() == null ? null : compte.getClient().getId_Utilisateur(),
+                compte.getClient() == null ? null : compte.getClient().getEmail(),
+                compte.getClient() == null ? null : compte.getClient().getNom()
         );
     }
 }

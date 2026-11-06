@@ -2,6 +2,7 @@ package com.SecBank.pro.Services.Clients;
 
 import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Cliens.OperationGuichet;
+import com.SecBank.pro.Models.Enums.StatutCompte;
 import com.SecBank.pro.Models.Enums.TypeCompte;
 
 import java.math.BigDecimal;
@@ -39,6 +40,21 @@ public interface CompteService {
      * unicite verifiee en base (409 si deja attribue).
      */
     CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib);
+
+    /**
+     * Idem, avec un solde initial (0.00 si absent).
+     * Un solde negatif est refuse en 400.
+     */
+    CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib, BigDecimal soldeInitial);
+
+    /** Tous les comptes de la banque, du plus recent au plus ancien (administration). */
+    List<CompteBancaire> listerTousLesComptes();
+
+    /**
+     * Gele (BLOQUE) ou reactive (ACTIF) un compte.
+     * Un compte cloture est definitif : la transition est refusee en 400.
+     */
+    CompteBancaire changerStatut(Long compteId, StatutCompte statut);
 
     /** Debit atomique du solde ; 400 si montant invalide ou solde insuffisant. */
     void debiter(Long compteId, BigDecimal montant);

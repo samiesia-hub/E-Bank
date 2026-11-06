@@ -77,22 +77,33 @@ public class TransactionServiceImpl implements TransactionService {
         return rechercher(compteId, clientId, du, au, sens, pageable);
     }
 
+    @Override
+    public List<Transaction> toutesLesTransactionsPourExport(Long clientId, Long compteId,
+                                                             LocalDate du, LocalDate au, SensTransaction sens) {
+        return transactionRepository.findAll(specification(compteId, clientId, du, au, sens),
+                PLUS_RECENTES_D_ABORD);
+    }
+
     private Page<Transaction> rechercher(Long compteId, Long clientId, LocalDate du, LocalDate au,
                                          SensTransaction sens, Pageable pageable) {
-        if (du != null && au != null && du.isAfter(au)) {
-            throw new IllegalArgumentException("La date de debut doit preceder la date de fin");
-        }
-
-        Specification<Transaction> specification = TransactionSpecifications.parCompte(compteId)
-                .and(TransactionSpecifications.parClient(clientId))
-                .and(TransactionSpecifications.entreDates(du, au))
-                .and(TransactionSpecifications.parSens(sens));
-
         Pageable pageableTrie = pageable.getSort().isUnsorted()
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), PLUS_RECENTES_D_ABORD)
                 : pageable;
 
-        return transactionRepository.findAll(specification, pageableTrie);
+        return transactionRepository.findAll(specification(compteId, clientId, du, au, sens), pageableTrie);
+    }
+
+    private static Specification<Transaction> specification(Long compteId, Long clientId,
+                                                            LocalDate du, LocalDate au,
+                                                            SensTransaction sens) {
+        if (du != null && au != null && du.isAfter(au)) {
+            throw new IllegalArgumentException("La date de debut doit preceder la date de fin");
+        }
+
+        return TransactionSpecifications.parCompte(compteId)
+                .and(TransactionSpecifications.parClient(clientId))
+                .and(TransactionSpecifications.entreDates(du, au))
+                .and(TransactionSpecifications.parSens(sens));
     }
 
     private void verifierProprietaire(Long compteId, String email) {

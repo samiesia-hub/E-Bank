@@ -28,4 +28,8 @@ public interface TransactionService {
     Page<Transaction> rechercherToutesLesTransactions(Long clientId, Long compteId,
                                                       LocalDate du, LocalDate au,
                                                       SensTransaction sens, Pageable pageable);
+
+    /** Export CSV : toutes les transactions filtrees, sans pagination, plus recentes d'abord. */
+    List<Transaction> toutesLesTransactionsPourExport(Long clientId, Long compteId,
+                                                      LocalDate du, LocalDate au, SensTransaction sens);
 }

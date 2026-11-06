@@ -1,5 +1,6 @@
 package com.SecBank.pro.Services.Clients;
 
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
 import com.SecBank.pro.Exceptions.OperationRefuseeException;
 import com.SecBank.pro.Exceptions.ResourceNotFoundException;
 import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
@@ -84,12 +85,18 @@ public class CompteServiceImpl implements CompteService {
     @Override
     @Transactional
     public CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte) {
-        return creerCompte(clientId, typeCompte, null);
+        return creerCompte(clientId, typeCompte, null, null);
     }
 
     @Override
     @Transactional
     public CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib) {
+        return creerCompte(clientId, typeCompte, rib, null);
+    }
+
+    @Override
+    @Transactional
+    public CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib, BigDecimal soldeInitial) {
         if (clientId == null) {
             throw new IllegalArgumentException("L'identifiant du client est obligatoire");
         }
@@ -97,7 +104,7 @@ public class CompteServiceImpl implements CompteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client introuvable avec id :" + clientId));
 
         if (rib != null && !rib.isBlank()) {
-            return creerCompteAvecRib(client, typeCompte, rib.trim());
+            return creerCompteAvecRib(client, typeCompte, rib.trim(), soldeInitial);
         }
 
         for (int tentative = 0; tentative < MAX_TENTATIVES; tentative++) {
@@ -108,7 +115,7 @@ public class CompteServiceImpl implements CompteService {
                 continue;
             }
 
-            return enregistrerCompte(client, numeroCompte, ribGenere, typeCompte);
+            return enregistrerCompte(client, numeroCompte, ribGenere, typeCompte, soldeInitial);
         }
 
         throw new RibDejaUtiliseException(
@@ -116,7 +123,8 @@ public class CompteServiceImpl implements CompteService {
     }
 
     /** RIB saisi par un agent : format et cle de controle, puis unicite. */
-    private CompteBancaire creerCompteAvecRib(Client client, TypeCompte typeCompte, String rib) {
+    private CompteBancaire creerCompteAvecRib(Client client, TypeCompte typeCompte, String rib,
+                                              BigDecimal soldeInitial) {
         String motif = IbanGenerator.raisonInvalidite(rib);
         if (motif != null) {
             throw new RibInvalideException(motif);
@@ -131,16 +139,49 @@ public class CompteServiceImpl implements CompteService {
                     "Un compte avec le numero de compte " + numeroCompte + " existe deja");
         }
 
-        return enregistrerCompte(client, numeroCompte, rib, typeCompte);
+        return enregistrerCompte(client, numeroCompte, rib, typeCompte, soldeInitial);
+    }
+
+    @Override
+    public List<CompteBancaire> listerTousLesComptes() {
+        return compteBancaireRepository.findAllByOrderByDateCreationDesc();
+    }
+
+    @Override
+    @Transactional
+    public CompteBancaire changerStatut(Long compteId, StatutCompte statut) {
+        if (statut == null) {
+            throw new DonneeInvalideException("Le statut est obligatoire");
+        }
+        if (statut == StatutCompte.CLOTURE) {
+            throw new DonneeInvalideException(
+                    "La cloture n'est pas geree ici : seuls le gel et la reactivation sont possibles");
+        }
+
+        CompteBancaire compte = chargerCompte(compteId);
+        if (compte.getStatutCompte() == StatutCompte.CLOTURE) {
+            throw new DonneeInvalideException("Un compte cloture ne peut plus changer de statut");
+        }
+        if (compte.getStatutCompte() == statut) {
+            return compte;
+        }
+
+        compte.setStatutCompte(statut);
+        return compteBancaireRepository.save(compte);
     }
 
     private CompteBancaire enregistrerCompte(Client client, String numeroCompte, String rib,
-                                             TypeCompte typeCompte) {
+                                             TypeCompte typeCompte, BigDecimal soldeInitial) {
+        BigDecimal solde = soldeInitial == null ? BigDecimal.ZERO : soldeInitial;
+        if (solde.signum() < 0) {
+            throw new DonneeInvalideException("Le solde initial ne peut pas etre negatif");
+        }
+
         CompteBancaire compte = new CompteBancaire();
         compte.setNumeroCompte(numeroCompte);
         compte.setRib(rib);
         compte.setDevise(DEVISE_PAR_DEFAUT);
-        compte.setSolde(BigDecimal.ZERO.setScale(ECHELLE_SOLDE, RoundingMode.HALF_UP));
+        compte.setSolde(solde.setScale(ECHELLE_SOLDE, RoundingMode.HALF_UP));
         compte.setTypeCompte(typeCompte == null ? TypeCompte.COURANT : typeCompte);
         compte.setStatutCompte(StatutCompte.ACTIF);
         compte.setDateCreation(LocalDateTime.now());
