@@ -117,8 +117,10 @@ class CsvExportServiceTest {
                 .thenReturn(List.of(virement));
 
         ByteArrayOutputStream flux = new ByteArrayOutputStream();
-        csvExportService.exporter(flux, 1L, 10L, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31),
-                SensTransaction.DEBIT);
+        int lignesEcrites = csvExportService.exporter(flux, 1L, 10L, LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 1, 31), SensTransaction.DEBIT);
+
+        assertEquals(1, lignesEcrites, "le nombre de lignes metier est renvoye pour l'audit");
 
         String csv = contenu(flux);
         String[] lignes = csv.split("\r\n");

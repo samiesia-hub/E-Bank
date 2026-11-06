@@ -123,6 +123,75 @@ cookies du frontend ne sont plus valides.
 - Respectez la version Java déclarée dans le `pom.xml`.
 
 
+## 10. Données de démonstration (seed)
+
+Le jeu de données de démonstration est fourni sous forme de scripts SQL, dans
+`pro/src/main/resources/db/demo/` :
+
+| Fichier | Rôle |
+| --- | --- |
+| `seed-demo.sql` | Insère les données de démo. **Idempotent** : les lignes de démonstration (domaine d'e-mail réservé `@demo.bankati.test`) sont supprimées puis réinsérées, deux exécutions donnent donc le même état. |
+| `reset-demo.sql` | `TRUNCATE` de toutes les tables (séquences remises à zéro) puis rechargement du seed. Efface **toutes** les données : base de développement uniquement. |
+
+Contenu inséré : 2 administrateurs, 2 agents support, 5 clients, 8 comptes (courant, épargne,
+professionnel, un compte bloqué), 27 transactions (virements et opérations au guichet),
+5 réclamations et 5 tickets support avec des statuts variés.
+Pour chaque compte, **le solde est exactement la somme de son historique**
+(`somme(crédits) − somme(débits)`), ce qui rend la démo cohérente en consultation comme en export CSV.
+
+### Mise en place
+
+Le schéma est créé par Hibernate au premier démarrage du backend : lancez-le une fois
+(`cd pro && ./mvnw spring-boot:run`), puis arrêtez-le et chargez le seed.
+
+```bash
+# rend les scripts accessibles dans le conteneur
+docker compose cp pro/src/main/resources/db/demo/. db:/tmp/ebank-demo
+
+# charge (ou recharge) les données de démonstration
+docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
+    -f /tmp/ebank-demo/seed-demo.sql
+
+# réinitialisation complète (efface tout, puis recharge le seed)
+docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
+    -f /tmp/ebank-demo/reset-demo.sql
+```
+
+### Identifiants de démonstration
+
+| Rôle | E-mail | Mot de passe |
+| --- | --- | --- |
+| Administrateur | `admin.demo1@demo.bankati.test` | `Admin1234!` |
+| Administrateur | `admin.demo2@demo.bankati.test` | `Admin1234!` |
+| Agent support | `agent.demo1@demo.bankati.test` | `Agent1234!` |
+| Agent support | `agent.demo2@demo.bankati.test` | `Agent1234!` |
+| Client | `client.demo1@demo.bankati.test` | `Client1234!` |
+| Client | `client.demo2@demo.bankati.test` | `Client1234!` |
+| Client | `client.demo3@demo.bankati.test` | `Client1234!` |
+| Client | `client.demo4@demo.bankati.test` | `Client1234!` |
+| Client | `client.demo5@demo.bankati.test` | `Client1234!` |
+
+> ⚠️ **Données de test non sécurisées.** Noms, numéros de comptes, RIB et téléphones sont
+> entièrement synthétiques, et les mots de passe ci-dessus sont publics (seuls leurs hashes
+> BCrypt figurent dans le script). Ils ne doivent jamais être réutilisés pour un compte réel
+> ni conservés sur une base exposée. Les scripts ne sont jamais exécutés automatiquement par
+> l'application : `ddl-auto` ne crée que le schéma.
+
+### Vérifier la cohérence
+
+```sql
+docker compose exec -T db psql -U ebank -d ebank -c "
+SELECT cb.numero_compte, cb.solde,
+       SUM(CASE WHEN t.sens = 'CREDIT' THEN t.montant ELSE -t.montant END) AS mouvements,
+       cb.solde - SUM(CASE WHEN t.sens = 'CREDIT' THEN t.montant ELSE -t.montant END) AS ecart
+  FROM compte_bancaire cb
+  JOIN transaction t ON t.compte_id = cb.id
+ GROUP BY cb.id, cb.numero_compte, cb.solde
+ ORDER BY cb.id;"
+```
+
+La colonne `ecart` doit valoir `0.00` pour les 8 comptes.
+
 ## Auteur
 
 Projet académique Taoufik Mansouri

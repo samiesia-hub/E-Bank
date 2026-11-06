@@ -2,6 +2,7 @@ package com.SecBank.pro.Controller.Client;
 
 import com.SecBank.pro.Conrollers.Clients.TransactionController;
 import com.SecBank.pro.Exceptions.AccesRefuseException;
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Cliens.Transaction;
@@ -9,25 +10,23 @@ import com.SecBank.pro.Models.Cliens.Virement;
 import com.SecBank.pro.Models.Enums.SensTransaction;
 import com.SecBank.pro.Models.Enums.StatutTransaction;
 import com.SecBank.pro.Models.Enums.TypeCompte;
+import com.SecBank.pro.Services.Admin.ExportTransactionsService;
 import com.SecBank.pro.Services.Clients.TransactionService;
-import com.SecBank.pro.Services.CsvExportService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -41,12 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -62,7 +58,7 @@ class TransactionControllerTest {
     private TransactionService transactionService;
 
     @MockitoBean
-    private CsvExportService csvExportService;
+    private ExportTransactionsService exportTransactionsService;
 
     @Test
     void transactionsDuCompte_pageParDefautTrieesParDateDesc() throws Exception {
@@ -153,47 +149,57 @@ class TransactionControllerTest {
     }
 
     @Test
-    void exportCsv_retourneUnFichierTelechargeableAvecLesFiltres() throws Exception {
-        mockMvc.perform(get("/api/admin/transactions/export-csv")
+    void export_retourneUnFichierTelechargeableAvecLesFiltres() throws Exception {
+        byte[] csv = csvDeTest();
+        when(exportTransactionsService.exporter(
+                isNull(), isNull(), eq(LocalDate.of(2026, 1, 1)), isNull(),
+                eq(SensTransaction.DEBIT), eq("admin@example.com")))
+                .thenReturn(csv);
+
+        mockMvc.perform(get("/api/admin/transactions/export")
                         .param("du", "2026-01-01")
                         .param("sens", "DEBIT")
                         .principal(principal("admin@example.com", "ROLE_ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("attachment")))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString(".csv")))
-                .andExpect(content().contentTypeCompatibleWith("text/csv"));
+                .andExpect(content().contentTypeCompatibleWith("text/csv"))
+                .andExpect(content().bytes(csv));
+
+        verify(exportTransactionsService).exporter(
+                isNull(), isNull(), eq(LocalDate.of(2026, 1, 1)), isNull(),
+                eq(SensTransaction.DEBIT), eq("admin@example.com"));
     }
 
     @Test
-    void exportCsv_leCorpsEstUnFluxCsvAvecToutesLesColonnes() throws Exception {
-        doAnswer(invocation -> {
-            OutputStream flux = invocation.getArgument(0);
-            flux.write(("\uFEFFDate;Emetteur;Destinataire;Montant;Devise;Statut;Sens;Compte;Libelle\r\n"
-                    + "05/01/2026 10:00:00;Jean Dupont;Proprietaire;120.00;MAD;EXECUTEE;DEBIT;"
-                    + "0000000000010;Loyer\r\n").getBytes(StandardCharsets.UTF_8));
-            return null;
-        }).when(csvExportService).exporter(any(), any(), any(), any(), any(), any());
+    void export_aliasExportCsvResteFonctionnel() throws Exception {
+        byte[] csv = csvDeTest();
+        when(exportTransactionsService.exporter(any(), any(), any(), any(), any(), any()))
+                .thenReturn(csv);
 
-        MvcResult resultat = mockMvc.perform(get("/api/admin/transactions/export-csv")
-                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(resultat))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(
-                        "Date;Emetteur;Destinataire;Montant;Devise;Statut;Sens;Compte;Libelle")))
-                .andExpect(content().string(containsString(
-                        "05/01/2026 10:00:00;Jean Dupont;Proprietaire;120.00;MAD;EXECUTEE;DEBIT;")));
-    }
-
-    @Test
-    void exportCsv_periodeIncoherente_repond400() throws Exception {
         mockMvc.perform(get("/api/admin/transactions/export-csv")
-                        .param("du", "2026-02-01")
+                        .param("compteId", "10")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString(".csv")))
+                .andExpect(content().bytes(csv));
+
+        verify(exportTransactionsService).exporter(
+                isNull(), eq(10L), isNull(), isNull(), isNull(), eq("admin@example.com"));
+    }
+
+    @Test
+    void export_periodeRefuseeParLeService_repond400() throws Exception {
+        when(exportTransactionsService.exporter(any(), any(), any(), any(), any(), any()))
+                .thenThrow(new DonneeInvalideException(
+                        "La periode d'export ne peut pas depasser 366 jours"));
+
+        mockMvc.perform(get("/api/admin/transactions/export")
+                        .param("du", "2020-01-01")
                         .param("au", "2026-01-01")
                         .principal(principal("admin@example.com", "ROLE_ADMIN")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("La periode d'export ne peut pas depasser 366 jours"));
     }
 
     @Test
@@ -216,6 +222,12 @@ class TransactionControllerTest {
     private static Principal principal(String email, String role) {
         return new UsernamePasswordAuthenticationToken(
                 email, null, List.of(new SimpleGrantedAuthority(role)));
+    }
+
+    private static byte[] csvDeTest() {
+        return ("\uFEFFDate;Emetteur;Destinataire;Montant;Devise;Statut;Sens;Compte;Libelle\r\n"
+                + "05/01/2026 10:00:00;Jean Dupont;Proprietaire;120.00;MAD;EXECUTEE;DEBIT;"
+                + "0000000000010;Loyer\r\n").getBytes(StandardCharsets.UTF_8);
     }
 
     private static Page<Transaction> pageDeTransactions() {

@@ -46,9 +46,11 @@ public class CsvExportService {
     /**
      * Ecrit l'entete puis une ligne par transaction correspondant aux filtres.
      * Le flux n'est pas ferme : il appartient a la reponse HTTP.
+     *
+     * @return le nombre de transactions ecrites (hors entete)
      */
-    public void exporter(OutputStream flux, Long clientId, Long compteId,
-                         LocalDate du, LocalDate au, SensTransaction sens) throws IOException {
+    public int exporter(OutputStream flux, Long clientId, Long compteId,
+                        LocalDate du, LocalDate au, SensTransaction sens) throws IOException {
         List<TransactionResponse> transactions = transactionService
                 .toutesLesTransactionsPourExport(clientId, compteId, du, au, sens)
                 .stream()
@@ -56,6 +58,8 @@ public class CsvExportService {
                 .toList();
 
         ecrire(flux, transactions);
+
+        return transactions.size();
     }
 
     public void ecrire(OutputStream flux, List<TransactionResponse> transactions) throws IOException {
