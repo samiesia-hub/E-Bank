@@ -30,10 +30,15 @@ public class Client extends Utilisateur {
     @JsonIgnore
     @OneToMany(mappedBy = "client")
     private List<Reclamation> reclamations;
+    // Meme raison : sans cela reclamation -> client -> comptes -> client -> ...
+    // depasse la profondeur JSON maximale et le corps de la reponse est perdu.
+    @JsonIgnore
     @OneToMany(mappedBy = "client")
     private List<CompteBancaire> compteBancaires;
+    @JsonIgnore
     @OneToMany(mappedBy = "client")
     private List<Beneficiaire> beneficiaires;
+    @JsonIgnore
     @OneToOne(mappedBy = "client")
     private DossierKYC dossierKYC;
 }

@@ -1,5 +1,6 @@
 package com.SecBank.pro.Models.Cliens;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,6 +23,8 @@ public class ResponseReclamation {
     private Long id;
     private String contenu;
     private Date datResponse;
+    // Reference arriere : la serialiser fait boucler reclamation -> reponse -> reclamation.
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "reclamation_id")
     private Reclamation reclamation;
