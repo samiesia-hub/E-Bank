@@ -29,8 +29,16 @@ public interface CompteService {
     /** Details d'un compte sans filtre d'appartenance (reserve a l'administration). */
     CompteBancaire consulterCompte(Long compteId);
 
-    /** Cree un compte ACTIF, en MAD, solde 0.00, avec numero de compte et RIB uniques. */
+    /** Cree un compte ACTIF, en MAD, solde 0.00, avec numero de compte et RIB generes uniques. */
     CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte);
+
+    /**
+     * Cree un compte avec un RIB eventuellement saisi par l'agent.
+     * RIB absent : numero de compte et RIB sont generes.
+     * RIB fourni : format 24 chiffres et cle de controle verifies (400 avec le motif),
+     * unicite verifiee en base (409 si deja attribue).
+     */
+    CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib);
 
     /** Debit atomique du solde ; 400 si montant invalide ou solde insuffisant. */
     void debiter(Long compteId, BigDecimal montant);

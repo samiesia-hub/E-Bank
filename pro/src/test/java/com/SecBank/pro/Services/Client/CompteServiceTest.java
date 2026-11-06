@@ -1,6 +1,8 @@
 package com.SecBank.pro.Services.Client;
 
 import com.SecBank.pro.Exceptions.ResourceNotFoundException;
+import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
+import com.SecBank.pro.Exceptions.RibInvalideException;
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Enums.StatutCompte;
@@ -8,12 +10,14 @@ import com.SecBank.pro.Models.Enums.TypeCompte;
 import com.SecBank.pro.Repositories.Client.ClientRepo;
 import com.SecBank.pro.Repositories.Client.CompteBancaireRepository;
 import com.SecBank.pro.Services.Clients.CompteServiceImpl;
+import com.SecBank.pro.Utils.IbanGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -132,7 +136,7 @@ class CompteServiceTest {
         // Arrange
         when(clientRepo.findById(1L))
                 .thenReturn(Optional.of(client));
-        when(compteBancaireRepository.save(any(CompteBancaire.class)))
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
@@ -154,7 +158,7 @@ class CompteServiceTest {
         assertNotNull(cree.getDateCreation());
         assertEquals(client, cree.getClient());
 
-        verify(compteBancaireRepository, times(1)).save(cree);
+        verify(compteBancaireRepository, times(1)).saveAndFlush(cree);
     }
 
     @Test
@@ -163,7 +167,7 @@ class CompteServiceTest {
         // Arrange
         when(clientRepo.findById(1L))
                 .thenReturn(Optional.of(client));
-        when(compteBancaireRepository.save(any(CompteBancaire.class)))
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
@@ -186,7 +190,7 @@ class CompteServiceTest {
                 compteService.creerCompte(99L, TypeCompte.COURANT)
         );
 
-        verify(compteBancaireRepository, never()).save(any(CompteBancaire.class));
+        verify(compteBancaireRepository, never()).saveAndFlush(any(CompteBancaire.class));
     }
 
     @Test
@@ -236,5 +240,100 @@ class CompteServiceTest {
         assertThrows(ResourceNotFoundException.class, () ->
                 compteService.consulterCompteDuClient(10L, "autre@example.com")
         );
+    }
+
+    @Test
+    void creerCompte_ribSaisiValide_estStockeTelQuel() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        when(compteBancaireRepository.existsByRib(anyString())).thenReturn(false);
+        when(compteBancaireRepository.existsByNumeroCompte(anyString())).thenReturn(false);
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        String rib = IbanGenerator.genererRib("1234567890123");
+
+        // Act
+        CompteBancaire cree = compteService.creerCompte(1L, TypeCompte.COURANT, rib);
+
+        // Assert : RIB conserve a l'identique, numero de compte extrait du RIB
+        assertEquals(rib, cree.getRib());
+        assertEquals("1234567890123", cree.getNumeroCompte());
+        assertTrue(IbanGenerator.estValide(cree.getRib()));
+    }
+
+    @Test
+    void creerCompte_ribInvalide_refuseAvecLeMotifExact() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        String ribValide = IbanGenerator.genererRib("1234567890123");
+        String cleFausse = String.format("%02d", (Integer.parseInt(ribValide.substring(22)) + 1) % 97);
+        String ribCleInvalide = ribValide.substring(0, 22) + cleFausse;
+
+        // Act + Assert : cle de controle
+        RibInvalideException cle = assertThrows(RibInvalideException.class, () ->
+                compteService.creerCompte(1L, TypeCompte.COURANT, ribCleInvalide));
+        assertEquals(IbanGenerator.MOTIF_RIB_CLE, cle.getMessage());
+
+        // Act + Assert : format
+        RibInvalideException format = assertThrows(RibInvalideException.class, () ->
+                compteService.creerCompte(1L, TypeCompte.COURANT, "RIB-123"));
+        assertEquals(IbanGenerator.MOTIF_RIB_FORMAT, format.getMessage());
+
+        verify(compteBancaireRepository, never()).saveAndFlush(any(CompteBancaire.class));
+    }
+
+    @Test
+    void creerCompte_ribDejaEnBase_remonteUnConflit() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        String rib = IbanGenerator.genererRib("1234567890123");
+        when(compteBancaireRepository.existsByRib(rib)).thenReturn(true);
+
+        // Act + Assert
+        RibDejaUtiliseException conflit = assertThrows(RibDejaUtiliseException.class, () ->
+                compteService.creerCompte(1L, TypeCompte.COURANT, rib));
+        assertEquals("Un compte avec le RIB " + rib + " existe deja", conflit.getMessage());
+
+        verify(compteBancaireRepository, never()).saveAndFlush(any(CompteBancaire.class));
+    }
+
+    @Test
+    void creerCompte_violationDeLaContrainteEnBase_remonteUnConflitEtPasUneErreur500() {
+
+        // Arrange : la contrainte d'unicite est violee a l'insertion (course concurrente)
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        when(compteBancaireRepository.existsByNumeroCompte(anyString())).thenReturn(false);
+        when(compteBancaireRepository.existsByRib(anyString())).thenReturn(false);
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint"));
+
+        // Act + Assert
+        assertThrows(RibDejaUtiliseException.class, () ->
+                compteService.creerCompte(1L, TypeCompte.COURANT));
+    }
+
+    @Test
+    void deuxCreationsSuccessives_produisentDesRibsUniquesEtValides() {
+
+        // Arrange
+        when(clientRepo.findById(1L)).thenReturn(Optional.of(client));
+        when(compteBancaireRepository.existsByNumeroCompte(anyString())).thenReturn(false);
+        when(compteBancaireRepository.existsByRib(anyString())).thenReturn(false);
+        when(compteBancaireRepository.saveAndFlush(any(CompteBancaire.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        CompteBancaire premier = compteService.creerCompte(1L, TypeCompte.COURANT);
+        CompteBancaire second = compteService.creerCompte(1L, TypeCompte.EPARGNE);
+
+        // Assert
+        assertNotEquals(premier.getRib(), second.getRib());
+        assertTrue(IbanGenerator.estValide(premier.getRib()));
+        assertTrue(IbanGenerator.estValide(second.getRib()));
+        assertEquals(premier.getRib().substring(9, 22), premier.getNumeroCompte());
     }
 }

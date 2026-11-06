@@ -1,11 +1,14 @@
 package com.SecBank.pro.Controller.Client;
 
 import com.SecBank.pro.Conrollers.Clients.CompteController;
+import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
+import com.SecBank.pro.Exceptions.RibInvalideException;
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Enums.StatutCompte;
 import com.SecBank.pro.Models.Enums.TypeCompte;
 import com.SecBank.pro.Services.Clients.CompteService;
+import com.SecBank.pro.Utils.IbanGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,6 +22,8 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -62,7 +67,7 @@ class CompteControllerTest {
 
     @Test
     void creationCompte_adminCreeUnCompteActifEnMAD() throws Exception {
-        when(compteService.creerCompte(1L, TypeCompte.COURANT)).thenReturn(compte());
+        when(compteService.creerCompte(1L, TypeCompte.COURANT, null)).thenReturn(compte());
 
         mockMvc.perform(post("/api/admin/comptes")
                         .principal(principal("admin@example.com", "ROLE_ADMIN"))
@@ -72,6 +77,34 @@ class CompteControllerTest {
                 .andExpect(jsonPath("$.rib").value("011780001000000000001045"))
                 .andExpect(jsonPath("$.devise").value("MAD"))
                 .andExpect(jsonPath("$.statutCompte").value("ACTIF"));
+    }
+
+    @Test
+    void creationCompte_ribInvalide_retourne400AvecLeMotifExact() throws Exception {
+        String rib = "011780001000000000001046";
+        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib)))
+                .thenThrow(new RibInvalideException(IbanGenerator.MOTIF_RIB_CLE));
+
+        mockMvc.perform(post("/api/admin/comptes")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"clientId\":1,\"typeCompte\":\"COURANT\",\"rib\":\"" + rib + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(IbanGenerator.MOTIF_RIB_CLE));
+    }
+
+    @Test
+    void creationCompte_ribDejaUtilise_retourne409() throws Exception {
+        String rib = "011780001000000000001045";
+        when(compteService.creerCompte(eq(1L), any(TypeCompte.class), eq(rib)))
+                .thenThrow(new RibDejaUtiliseException("Un compte avec le RIB " + rib + " existe deja"));
+
+        mockMvc.perform(post("/api/admin/comptes")
+                        .principal(principal("admin@example.com", "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"clientId\":1,\"typeCompte\":\"COURANT\",\"rib\":\"" + rib + "\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Un compte avec le RIB " + rib + " existe deja"));
     }
 
     private static Principal principal(String email, String role) {

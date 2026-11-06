@@ -51,14 +51,15 @@ public class CompteController {
         return ResponseEntity.ok(CompteResponse.depuis(compte));
     }
 
-    /** Creation d'un compte par un administrateur (numero de compte et RIB generes). */
+    /** Creation d'un compte par un administrateur (numero de compte et RIB generes, ou RIB fourni). */
     @PostMapping("/api/admin/comptes")
     public ResponseEntity<CompteResponse> creerCompte(@RequestBody CreationCompteRequete requete) {
         if (requete == null || requete.clientId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'identifiant du client est obligatoire");
         }
 
-        CompteBancaire compte = compteService.creerCompte(requete.clientId(), requete.typeCompte());
+        CompteBancaire compte = compteService.creerCompte(
+                requete.clientId(), requete.typeCompte(), requete.rib());
         return ResponseEntity.status(HttpStatus.CREATED).body(CompteResponse.depuis(compte));
     }
 
@@ -67,6 +68,6 @@ public class CompteController {
                 .anyMatch(authorite -> "ROLE_ADMIN".equals(authorite.getAuthority()));
     }
 
-    public record CreationCompteRequete(Long clientId, TypeCompte typeCompte) {
+    public record CreationCompteRequete(Long clientId, TypeCompte typeCompte, String rib) {
     }
 }

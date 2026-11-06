@@ -2,6 +2,8 @@ package com.SecBank.pro.Services.Clients;
 
 import com.SecBank.pro.Exceptions.OperationRefuseeException;
 import com.SecBank.pro.Exceptions.ResourceNotFoundException;
+import com.SecBank.pro.Exceptions.RibDejaUtiliseException;
+import com.SecBank.pro.Exceptions.RibInvalideException;
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Cliens.OperationGuichet;
@@ -16,14 +18,14 @@ import com.SecBank.pro.Repositories.Client.CompteBancaireRepository;
 import com.SecBank.pro.Repositories.Client.TransactionRepository;
 import com.SecBank.pro.Repositories.UserRepo;
 import com.SecBank.pro.Services.Admin.AuditService;
+import com.SecBank.pro.Utils.IbanGenerator;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,17 +33,8 @@ import java.util.List;
 @Service
 public class CompteServiceImpl implements CompteService {
 
-    /** Code banque, ville et agence utilises pour construire le RIB. */
-    private static final String PREFIXE_BANQUE = "011";
-    private static final String CODE_VILLE = "780";
-    private static final String CODE_AGENCE = "001";
-    private static final int LONGUEUR_NUMERO_COMPTE = 13;
-    private static final int LONGUEUR_RIB = 24;
     private static final int MAX_TENTATIVES = 10;
     private static final int ECHELLE_SOLDE = 2;
-    private static final BigInteger MODULO_RIB = BigInteger.valueOf(97);
-    private static final BigInteger CENT = BigInteger.valueOf(100);
-    private static final SecureRandom ALEATOIRE = new SecureRandom();
 
     private final ClientRepo clientRepo;
     private final CompteBancaireRepository compteBancaireRepository;
@@ -89,35 +82,77 @@ public class CompteServiceImpl implements CompteService {
     }
 
     @Override
+    @Transactional
     public CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte) {
+        return creerCompte(clientId, typeCompte, null);
+    }
+
+    @Override
+    @Transactional
+    public CompteBancaire creerCompte(Long clientId, TypeCompte typeCompte, String rib) {
         if (clientId == null) {
             throw new IllegalArgumentException("L'identifiant du client est obligatoire");
         }
         Client client = clientRepo.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client introuvable avec id :" + clientId));
 
+        if (rib != null && !rib.isBlank()) {
+            return creerCompteAvecRib(client, typeCompte, rib.trim());
+        }
+
         for (int tentative = 0; tentative < MAX_TENTATIVES; tentative++) {
-            String numeroCompte = genererNumeroCompte();
-            String rib = genererRib(numeroCompte);
+            String numeroCompte = IbanGenerator.genererNumeroCompte();
+            String ribGenere = IbanGenerator.genererRib(numeroCompte);
             if (compteBancaireRepository.existsByNumeroCompte(numeroCompte)
-                    || compteBancaireRepository.existsByRib(rib)) {
+                    || compteBancaireRepository.existsByRib(ribGenere)) {
                 continue;
             }
 
-            CompteBancaire compte = new CompteBancaire();
-            compte.setNumeroCompte(numeroCompte);
-            compte.setRib(rib);
-            compte.setDevise(DEVISE_PAR_DEFAUT);
-            compte.setSolde(BigDecimal.ZERO.setScale(ECHELLE_SOLDE, RoundingMode.HALF_UP));
-            compte.setTypeCompte(typeCompte == null ? TypeCompte.COURANT : typeCompte);
-            compte.setStatutCompte(StatutCompte.ACTIF);
-            compte.setDateCreation(LocalDateTime.now());
-            compte.setClient(client);
-
-            return compteBancaireRepository.save(compte);
+            return enregistrerCompte(client, numeroCompte, ribGenere, typeCompte);
         }
 
-        throw new IllegalStateException("Impossible de generer un numero de compte / RIB unique");
+        throw new RibDejaUtiliseException(
+                "Aucun RIB unique n'a pu etre genere apres " + MAX_TENTATIVES + " tentatives");
+    }
+
+    /** RIB saisi par un agent : format et cle de controle, puis unicite. */
+    private CompteBancaire creerCompteAvecRib(Client client, TypeCompte typeCompte, String rib) {
+        String motif = IbanGenerator.raisonInvalidite(rib);
+        if (motif != null) {
+            throw new RibInvalideException(motif);
+        }
+
+        String numeroCompte = IbanGenerator.numeroCompteDepuisRib(rib);
+        if (compteBancaireRepository.existsByRib(rib)) {
+            throw new RibDejaUtiliseException("Un compte avec le RIB " + rib + " existe deja");
+        }
+        if (compteBancaireRepository.existsByNumeroCompte(numeroCompte)) {
+            throw new RibDejaUtiliseException(
+                    "Un compte avec le numero de compte " + numeroCompte + " existe deja");
+        }
+
+        return enregistrerCompte(client, numeroCompte, rib, typeCompte);
+    }
+
+    private CompteBancaire enregistrerCompte(Client client, String numeroCompte, String rib,
+                                             TypeCompte typeCompte) {
+        CompteBancaire compte = new CompteBancaire();
+        compte.setNumeroCompte(numeroCompte);
+        compte.setRib(rib);
+        compte.setDevise(DEVISE_PAR_DEFAUT);
+        compte.setSolde(BigDecimal.ZERO.setScale(ECHELLE_SOLDE, RoundingMode.HALF_UP));
+        compte.setTypeCompte(typeCompte == null ? TypeCompte.COURANT : typeCompte);
+        compte.setStatutCompte(StatutCompte.ACTIF);
+        compte.setDateCreation(LocalDateTime.now());
+        compte.setClient(client);
+
+        try {
+            // Flush immediat : une violation de la contrainte d'unicite remonte ici
+            // et devient un 409 explicite, jamais une erreur 500.
+            return compteBancaireRepository.saveAndFlush(compte);
+        } catch (DataIntegrityViolationException conflit) {
+            throw new RibDejaUtiliseException("Un compte avec le RIB " + rib + " existe deja");
+        }
     }
 
     @Override
@@ -260,25 +295,4 @@ public class CompteServiceImpl implements CompteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Compte introuvable avec id :" + compteId));
     }
 
-    /** Numero de compte sur 13 chiffres, tire aleatoirement puis verifie en base. */
-    private static String genererNumeroCompte() {
-        long valeur = ALEATOIRE.nextLong(1_000_000_000_000L);
-        return String.format("%0" + LONGUEUR_NUMERO_COMPTE + "d", valeur);
-    }
-
-    /**
-     * RIB = banque(3) + ville(3) + agence(3) + numero de compte(13) + cle(2).
-     * La cle est calculee pour que le RIB complet soit divisible par 97.
-     */
-    private static String genererRib(String numeroCompte) {
-        String base = PREFIXE_BANQUE + CODE_VILLE + CODE_AGENCE + numeroCompte;
-        int reste = new BigInteger(base).multiply(CENT).mod(MODULO_RIB).intValue();
-        int cle = (MODULO_RIB.intValue() - reste) % MODULO_RIB.intValue();
-
-        String rib = base + String.format("%02d", cle);
-        if (rib.length() != LONGUEUR_RIB) {
-            throw new IllegalStateException("RIB genere invalide : " + rib);
-        }
-        return rib;
-    }
 }

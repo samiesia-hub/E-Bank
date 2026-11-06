@@ -8,10 +8,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Verifie sur une vraie base (H2) que les mises a jour de solde sont atomiques :
@@ -84,6 +86,20 @@ class CompteBancaireRepositoryTest {
 
         assertEquals(0, lignes);
         assertSolde("1500.00");
+    }
+
+    @Test
+    void ribDejaPresent_estRefuseParLaContrainteDUniciteDuSchema() {
+        CompteBancaire doublon = new CompteBancaire();
+        doublon.setNumeroCompte("0000000000020");
+        doublon.setRib(compte.getRib());
+        doublon.setDevise("MAD");
+        doublon.setSolde(new BigDecimal("0.00"));
+        doublon.setTypeCompte(TypeCompte.COURANT);
+        doublon.setStatutCompte(StatutCompte.ACTIF);
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> compteBancaireRepository.saveAndFlush(doublon));
     }
 
     private void assertSolde(String attendu) {
