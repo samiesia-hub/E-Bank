@@ -179,18 +179,54 @@ docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
 
 ### Vérifier la cohérence
 
-```sql
-docker compose exec -T db psql -U ebank -d ebank -c "
-SELECT cb.numero_compte, cb.solde,
-       SUM(CASE WHEN t.sens = 'CREDIT' THEN t.montant ELSE -t.montant END) AS mouvements,
-       cb.solde - SUM(CASE WHEN t.sens = 'CREDIT' THEN t.montant ELSE -t.montant END) AS ecart
-  FROM compte_bancaire cb
-  JOIN transaction t ON t.compte_id = cb.id
- GROUP BY cb.id, cb.numero_compte, cb.solde
- ORDER BY cb.id;"
+`check-demo.sql` (lecture seule) contrôle la volumétrie, les soldes face à l'historique, les clés
+étrangères, les RIB (clé modulo 97), les statuts variés et le scénario jouable de chaque compte.
+Il est limité aux données de démonstration, donc exécutable sur une base déjà peuplée :
+
+```bash
+docker compose cp pro/src/main/resources/db/demo/. db:/tmp/ebank-demo
+docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
+    -f /tmp/ebank-demo/check-demo.sql
 ```
 
-La colonne `ecart` doit valoir `0.00` pour les 8 comptes.
+Les 19 lignes de la première section doivent toutes afficher le verdict `OK` (vérifié sur base
+vierge puis après une seconde exécution du seed). La deuxième section rappelle le scénario de
+chaque compte : `client.demo1` à `client.demo3` et `client.demo5` ont des comptes actifs avec
+historique, et `client.demo4` porte le **compte bloqué** (2007), qui sert à jouer le scénario de
+refus d'opération (dépôt/retrait → 400).
+
+## 11. Authentification (JWT)
+
+```bash
+# 1. obtenir un jeton (validite 24 h, reglable via jwt.expiration-ms)
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"client.demo1@demo.bankati.test","motDePasse":"Client1234!"}' | jq -r .token)
+
+# 2. appeler l'API
+curl -s http://localhost:8080/api/client/comptes -H "Authorization: Bearer $TOKEN"
+```
+
+`/api/auth/login` renvoie `{email, nom, role, token}` et pose en plus un cookie httpOnly `session`
+(utilisé par le frontend). Rôles : `ADMIN`, `CLIENT`, `AGENT_SUPPORT` — `/api/admin/**` exige `ADMIN`,
+`/api/client/**` exige `CLIENT`, le reste demande un jeton valide. Il n'y a **pas de refresh token** :
+le jeton vit 24 h et il suffit de se reconnecter ; `/api/auth/logout` efface le cookie, le jeton déjà
+émis reste valable jusqu'à son expiration (le supprimer côté client).
+
+## 12. Documentation de l'API (Swagger / Postman)
+
+- Contrat OpenAPI : `http://localhost:8080/v3/api-docs` · Swagger UI : `http://localhost:8080/swagger-ui.html`
+  (généré par springdoc 3.2.0 depuis le code : 16 chemins / 17 opérations, chacune avec résumé, exemple et codes d'erreur).
+- Collection Postman : `pro/docs/postman/E-Bank.postman_collection.json` avec l'environnement
+  `pro/docs/postman/E-Bank.postman_environment.json` (ajuster `baseUrl`). Exécuter d'abord le dossier
+  **1. Authentification** : il mémorise les jetons `adminToken`, `clientToken`, `supportToken`.
+- Sans Postman (parcours complet des 32 requêtes, codes HTTP vérifiés) :
+
+```bash
+python3 pro/docs/postman/executer-collection.py \
+    pro/docs/postman/E-Bank.postman_collection.json \
+    pro/docs/postman/E-Bank.postman_environment.json
+```
 
 ## Auteur
 

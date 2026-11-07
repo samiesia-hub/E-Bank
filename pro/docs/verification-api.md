@@ -111,12 +111,17 @@ Correctif recommandé (non appliqué : code du module client/support, à arbitre
 exiger que le `clientId` corresponde au porteur du jeton pour un `CLIENT`, et n'autoriser
 `GET /{id}` que pour le propriétaire ou un rôle `ADMIN`/`SUPPORT`.
 
-### 3.3 OUVERT — pas de contrat Swagger
+### 3.3 RÉSOLU (tâche 7) — contrat Swagger et collection Postman
 
-Aucune dépendance `springdoc` dans `pom.xml`, donc ni `swagger-ui` ni `/v3/api-docs` : la
-comparaison « contrat Swagger ↔ comportement réel » demandée par la tâche ne peut pas être faite.
-La matrice ci-dessus fait office de contrat de référence en attendant la tâche 7
-(annotations + collection Postman).
+Au moment de cette vérification, `pom.xml` n'avait aucune dépendance `springdoc` : ni `swagger-ui`
+ni `/v3/api-docs`, donc aucune comparaison contrat ↔ réel possible. C'est depuis corrigé :
+
+- `springdoc-openapi-starter-webmvc-ui` 3.2.0 (seule ligne compatible Spring Boot 4.1.x),
+  `/v3/api-docs` et `/swagger-ui.html` exposés en lecture publique ;
+- 16 chemins / 17 opérations, chacune avec résumé, exemple de requête et codes d'erreur ;
+- collection Postman (`pro/docs/postman/`) exécutée de bout en bout : **32 requêtes, 0 échec**.
+
+La matrice de la section 2 reste la référence des codes réellement renvoyés.
 
 ### 3.4 OUVERT — endpoints support / KYC / audit inexistants
 
