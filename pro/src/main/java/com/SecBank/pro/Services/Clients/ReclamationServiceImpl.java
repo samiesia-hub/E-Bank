@@ -4,8 +4,9 @@ import com.SecBank.pro.Exceptions.ResourceNotFoundException;
 import com.SecBank.pro.Models.Cliens.Client;
 import com.SecBank.pro.Models.Cliens.Reclamation;
 import com.SecBank.pro.Models.Énums.StatusReclamation;
-import com.SecBank.pro.Repositories.Client.ClientRepo;
+
 import com.SecBank.pro.Repositories.Client.ReclamationRepo;
+import com.SecBank.pro.Repositories.ClientRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

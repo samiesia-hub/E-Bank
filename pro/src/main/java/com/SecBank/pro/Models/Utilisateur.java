@@ -22,7 +22,7 @@ public class Utilisateur {
     private String password;
     private String nom;
     private String CIN;
-    private int telephone;
+    private String telephone;
     private boolean actif;
     private boolean doubleauthActive;
     @Enumerated(value = EnumType.STRING)
