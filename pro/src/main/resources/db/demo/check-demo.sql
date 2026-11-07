@@ -34,11 +34,17 @@ FROM (
     SELECT 'tickets de demo', 5,
            (SELECT count(*) FROM ticket_support WHERE id BETWEEN 5001 AND 5005)
     UNION ALL
+    -- Compte limite aux comptes de demo : le script doit rester valide sur une base de
+    -- developpement qui contient aussi des operations hors demonstration.
     SELECT 'virements de demo', 14,
-           (SELECT count(*) FROM virement)
+           (SELECT count(*) FROM virement v
+              JOIN transaction t ON t.id = v.transaction_id
+             WHERE t.compte_id BETWEEN 2001 AND 2008)
     UNION ALL
     SELECT 'operations au guichet de demo', 13,
-           (SELECT count(*) FROM operation_guichet)
+           (SELECT count(*) FROM operation_guichet o
+              JOIN transaction t ON t.id = o.transaction_id
+             WHERE t.compte_id BETWEEN 2001 AND 2008)
     UNION ALL
     -- Aucun compte de demo ne doit avoir un solde negatif.
     SELECT 'comptes de demo a solde negatif', 0,

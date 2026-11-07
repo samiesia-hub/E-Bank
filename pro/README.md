@@ -241,6 +241,31 @@ SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
 
 Détail des contrôles et matrice des codes d'erreur : `pro/docs/verification-logs.md`.
 
+## 14. Schéma et migrations (Flyway)
+
+```
+pro/src/main/resources/db/migration/
+  V1__schema_initial.sql     -- 16 tables, clés, contraintes CHECK, séquences
+  V2__index_et_unicite.sql   -- email unique + index dates / statuts / clés étrangères
+```
+
+- **Base vide** : au démarrage, V1 puis V2 s'appliquent et `flyway_schema_history` est créée.
+- **Base existante** : `baseline-on-migrate` la marque en V1 sans rien recréer, puis seule les
+  migrations suivantes s'appliquent (aucune perte de données).
+- Hibernate ne modifie plus le schéma : `spring.jpa.hibernate.ddl-auto=validate` (le démarrage
+  échoue si la base ne correspond pas au mapping).
+- Les tests utilisent H2 avec Flyway désactivé (`spring.flyway.enabled=false`) : le schéma y est
+  généré par Hibernate.
+
+Contrôle du schéma, des index et des contraintes (lecture seule, verdict `OK` attendu) :
+
+```bash
+docker compose cp pro/src/main/resources/db/demo/. db:/tmp/ebank-demo
+docker compose exec -T db psql -U ebank -d ebank -f /tmp/ebank-demo/check-schema.sql
+```
+
+Rapport détaillé : `pro/docs/verification-schema.md`.
+
 ## Auteur
 
 Projet académique Taoufik Mansouri

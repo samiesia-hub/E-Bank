@@ -122,6 +122,14 @@ DELETE FROM agent_support
 DELETE FROM administrateur
  WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
 
+-- Les entrees d'audit (export CSV, operations au guichet, ...) referencent les
+-- utilisateurs de demo : elles partent avant eux (la cle etrangere n'a pas de
+-- ON DELETE CASCADE).
+DELETE FROM journal_audit
+ WHERE utilisateur_id IN (SELECT id_utilisateur
+                            FROM utilisateur
+                           WHERE email LIKE '%@demo.bankati.test');
+
 DELETE FROM utilisateur WHERE email LIKE '%@demo.bankati.test';
 
 -- ---------------------------------------------------------------------
