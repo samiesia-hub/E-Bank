@@ -228,6 +228,19 @@ python3 pro/docs/postman/executer-collection.py \
     pro/docs/postman/E-Bank.postman_environment.json
 ```
 
+## 13. Journalisation et profil production
+
+Les logs restent en `INFO` : aucun mot de passe, jeton, RIB ou numéro de compte complet n'y est
+écrit, et aucune requête SQL n'est journalisée. Une erreur inattendue renvoie au client un 500
+générique (`Erreur interne du serveur, réessayer plus tard`) tandis que la stack trace reste dans
+les logs serveur. En production, activer le profil dédié (DEBUG désactivé, bibliothèques en WARN) :
+
+```bash
+SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
+```
+
+Détail des contrôles et matrice des codes d'erreur : `pro/docs/verification-logs.md`.
+
 ## Auteur
 
 Projet académique Taoufik Mansouri
