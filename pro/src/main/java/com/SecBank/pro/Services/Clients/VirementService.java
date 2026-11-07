@@ -6,7 +6,16 @@ import java.math.BigDecimal;
 
 public interface VirementService {
 
-    Virement effectuerVirement(Long beneficiaireId, BigDecimal montant, String motif);
+    Virement effectuerVirement(
+            String emailClient,
+            Long compteSourceId,
+            Long beneficiaireId,
+            BigDecimal montant,
+            String motif
+    );
 
-    void executer(Long virementId);
+    Virement consulterRecu(
+            String emailClient,
+            String reference
+    );
 }

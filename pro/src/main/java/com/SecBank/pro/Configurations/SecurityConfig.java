@@ -77,6 +77,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Espace client : le token doit porter le role CLIENT.
                         .requestMatchers("/api/client/**").hasRole("CLIENT")
+                        .requestMatchers("/api/virements/**").hasRole("CLIENT")
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
