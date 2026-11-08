@@ -21,6 +21,7 @@ public class Reclamation {
     private String objet;
     private String desciprtion;
     private Date dateCreation;
+    private Date dateMiseAJour;
     @Enumerated(value = EnumType.STRING)
     private StatusReclamation status;
     @ManyToOne
