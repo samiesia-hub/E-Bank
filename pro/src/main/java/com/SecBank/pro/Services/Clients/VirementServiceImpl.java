@@ -15,8 +15,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -179,7 +181,32 @@ public class VirementServiceImpl implements VirementService {
 
         return virement;
     }
+@Override
+@Transactional(readOnly = true)
+public Page<Virement> consulterHistorique(
+        String emailClient,
+        LocalDate dateDebut,
+        LocalDate dateFin,
+        StatutTransaction statut,
+        Pageable pageable
+) {
+    LocalDateTime debut = dateDebut != null
+            ? dateDebut.atStartOfDay()
+            : LocalDate.of(1970, 1, 1).atStartOfDay();
 
+    LocalDateTime finExclusive = dateFin != null
+            ? dateFin.plusDays(1).atStartOfDay()
+            : LocalDate.now().plusDays(1).atStartOfDay();
+
+    return virementRepository.rechercherHistoriqueDuClient(
+            emailClient,
+            SensTransaction.DEBIT,
+            debut,
+            finExclusive,
+            statut,
+            pageable
+    );
+}
     private static String genererReference(
             LocalDateTime date,
             Long identifiant
