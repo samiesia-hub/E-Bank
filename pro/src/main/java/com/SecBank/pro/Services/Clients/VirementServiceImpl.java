@@ -109,7 +109,8 @@ public class VirementServiceImpl implements VirementService {
             );
         }
 
-        CompteBancaire sourcePourTrace = compteRepository.findById(compteSource.getId())
+        CompteBancaire sourcePourTrace = compteRepository
+                .findById(compteSource.getId())
                 .orElseThrow();
 
         CompteBancaire destinationPourTrace = compteRepository
@@ -132,10 +133,8 @@ public class VirementServiceImpl implements VirementService {
         ligneDebit.setBeneficiaire(nomBeneficiaire);
         ligneDebit.setMotif(motifValide);
 
-        // Sauvegarde d'abord pour récupérer un identifiant unique.
         Virement debitSauvegarde = virementRepository.save(ligneDebit);
 
-        // Exemple : VIR-20261107-000123
         debitSauvegarde.setReference(
                 genererReference(maintenant, debitSauvegarde.getId())
         );
@@ -185,7 +184,9 @@ public class VirementServiceImpl implements VirementService {
             LocalDateTime date,
             Long identifiant
     ) {
-        String jour = date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String jour = date.format(
+                DateTimeFormatter.ofPattern("yyyyMMdd")
+        );
 
         return String.format(
                 Locale.ROOT,
@@ -209,7 +210,9 @@ public class VirementServiceImpl implements VirementService {
             String emailClient
     ) {
         if (compte.getClient() == null
-                || !emailClient.equalsIgnoreCase(compte.getClient().getEmail())) {
+                || !emailClient.equalsIgnoreCase(
+                        compte.getClient().getEmail()
+                )) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Ce virement ne vous appartient pas"

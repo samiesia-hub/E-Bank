@@ -14,8 +14,5 @@ public interface VirementService {
             String motif
     );
 
-    Virement consulterRecu(
-            String emailClient,
-            String reference
-    );
+    Virement consulterRecu(String emailClient, String reference);
 }

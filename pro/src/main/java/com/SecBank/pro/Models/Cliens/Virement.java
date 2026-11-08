@@ -25,7 +25,6 @@ public class Virement extends Transaction {
     private String beneficiaire;
     private String motif;
 
-    // Rempli sur la ligne DEBIT pour afficher le reçu complet.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "compte_destinataire_id")
     private CompteBancaire compteDestinataire;

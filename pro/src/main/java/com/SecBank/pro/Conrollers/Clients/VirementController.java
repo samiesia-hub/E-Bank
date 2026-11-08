@@ -48,8 +48,7 @@ public class VirementController {
                 requete.motif()
         );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(VirementResponse.depuis(virement));
     }
 
@@ -65,9 +64,7 @@ public class VirementController {
                 reference
         );
 
-        return ResponseEntity.ok(
-                RecuVirementResponse.depuis(virement)
-        );
+        return ResponseEntity.ok(RecuVirementResponse.depuis(virement));
     }
 
     private static void verifierRoleClient(Authentication authentication) {
