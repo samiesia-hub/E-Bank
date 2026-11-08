@@ -1,8 +1,10 @@
 package com.SecBank.pro.Conrollers;
 
 import com.SecBank.pro.Configurations.JwtService;
+import com.SecBank.pro.Dtos.ResetPasswordDTO;
 import com.SecBank.pro.Models.Utilisateur;
 import com.SecBank.pro.Services.AuthService;
+import com.SecBank.pro.Services.ReinitialisationMotDePasseService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -28,10 +30,14 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final ReinitialisationMotDePasseService reinitialisationService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService,
+                          JwtService jwtService,
+                          ReinitialisationMotDePasseService reinitialisationService) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.reinitialisationService = reinitialisationService;
     }
 
     @PostMapping("/register")
@@ -70,6 +76,22 @@ public class AuthController {
                 .body(Map.of("message", "Déconnecté"));
     }
 
+    /** Étape 1 : génère un code OTP. Même réponse que l'email existe ou non. */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> motDePasseOublie(@RequestBody DemandeReinitialisationRequete requete) {
+        reinitialisationService.demanderReinitialisation(requete.email());
+        return ResponseEntity.ok(Map.of("message",
+                "Si cette adresse est enregistrée, un code de réinitialisation vient d'être envoyé."));
+    }
+
+    /** Étape 2 : vérifie le code, change le mot de passe et invalide le code. */
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> reinitialiserMotDePasse(@RequestBody ResetPasswordDTO requete) {
+        reinitialisationService.reinitialiserMotDePasse(
+                requete.email(), requete.code(), requete.nouveauMotDePasse());
+        return ResponseEntity.ok(Map.of("message", "Mot de passe réinitialisé"));
+    }
+
     private ResponseEntity<Map<String, String>> reponseAvecSession(Utilisateur utilisateur) {
         String role = authService.rolePourToken(utilisateur);
         String token = jwtService.creerToken(utilisateur.getEmail(), role);
@@ -96,5 +118,8 @@ public class AuthController {
     }
 
     public record ConnexionRequete(String email, String motDePasse) {
+    }
+
+    public record DemandeReinitialisationRequete(String email) {
     }
 }
