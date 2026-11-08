@@ -6,6 +6,13 @@ import com.SecBank.pro.Models.Cliens.Transaction;
 import com.SecBank.pro.Models.Enums.SensTransaction;
 import com.SecBank.pro.Services.Admin.ExportTransactionsService;
 import com.SecBank.pro.Services.Clients.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +38,7 @@ import java.time.LocalDate;
  * Le client est identifie par l'email du token ; l'admin voit toute la banque.
  */
 @RestController
+@Tag(name = "Transactions", description = "Historique pagine et export CSV des transactions.")
 public class TransactionController {
 
     private static final Sort PLUS_RECENTES_D_ABORD = Sort.by(Sort.Direction.DESC, "dateTransaction")
@@ -49,13 +57,25 @@ public class TransactionController {
     }
 
     /** Historique d'un compte : le proprietaire uniquement, 403 sinon. */
+    @Operation(summary = "Historique des transactions d'un compte",
+            description = "Tri decroissant par date. Filtres optionnels : periode (`du`/`au`) et sens (CREDIT/DEBIT).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page de transactions"),
+            @ApiResponse(responseCode = "400", description = "Pagination invalide (size hors 1..100) ou periode inversee",
+                    content = @Content(examples = @ExampleObject(
+                            value = "{\"status\":400,\"error\":\"Bad Request\",\"message\":\"size doit etre compris entre 1 et 100\"}"))),
+            @ApiResponse(responseCode = "404", description = "Compte inexistant ou n'appartenant pas au client", content = @Content)
+    })
     @GetMapping("/api/comptes/{id}/transactions")
     public ResponseEntity<PageResponse<TransactionResponse>> transactionsDuCompte(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Identifiant du compte", example = "2001") @PathVariable Long id,
+            @Parameter(description = "Numero de page (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de page (1 a 100)", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Date de debut incluse", example = "2026-01-01")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+            @Parameter(description = "Date de fin incluse", example = "2026-12-31")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
+            @Parameter(description = "Sens du mouvement", example = "DEBIT")
             @RequestParam(required = false) SensTransaction sens,
             Authentication authentication) {
 
@@ -67,11 +87,19 @@ public class TransactionController {
     }
 
     /** Historique de tous les comptes du client connecte, avec compte concerne optionnel. */
+    @Operation(summary = "Historique des transactions du client connecte",
+            description = "Agrege tous les comptes du client ; `compteId` restreint a un compte precis.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page de transactions"),
+            @ApiResponse(responseCode = "400", description = "Pagination invalide ou periode inversee", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Role different de CLIENT", content = @Content)
+    })
     @GetMapping("/api/client/transactions")
     public ResponseEntity<PageResponse<TransactionResponse>> mesTransactions(
+            @Parameter(description = "Restreindre a un compte du client", example = "2001")
             @RequestParam(required = false) Long compteId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Numero de page (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de page (1 a 100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
             @RequestParam(required = false) SensTransaction sens,
@@ -85,12 +113,19 @@ public class TransactionController {
     }
 
     /** Supervision globale de la banque (reserve au role ADMIN par la configuration de securite). */
+    @Operation(summary = "Supervision de toutes les transactions (administration)",
+            description = "Meme pagination et memes filtres que l'export CSV.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page de transactions de la banque"),
+            @ApiResponse(responseCode = "400", description = "Pagination invalide ou periode inversee", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Role different de ADMIN", content = @Content)
+    })
     @GetMapping("/api/admin/transactions")
     public ResponseEntity<PageResponse<TransactionResponse>> toutesLesTransactions(
-            @RequestParam(required = false) Long clientId,
-            @RequestParam(required = false) Long compteId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Filtrer sur un client", example = "1005") @RequestParam(required = false) Long clientId,
+            @Parameter(description = "Filtrer sur un compte", example = "2001") @RequestParam(required = false) Long compteId,
+            @Parameter(description = "Numero de page (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de page (1 a 100)", example = "10") @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
             @RequestParam(required = false) SensTransaction sens) {
@@ -107,12 +142,27 @@ public class TransactionController {
      * La periode est bornee et l'action est journalisee par ExportTransactionsService.
      * "export" est le nom officiel ; "export-csv" reste expose pour compatibilite.
      */
+    @Operation(summary = "Exporter les transactions en CSV (administration)",
+            description = "Flux CSV UTF-8 avec BOM, separateur point-virgule (Excel). "
+                    + "Periode par defaut : 30 derniers jours ; 366 jours maximum ; periode inversee refusee. "
+                    + "Chaque export est journalise (audit) au nom de l'administrateur.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fichier CSV (text/csv)",
+                    content = @Content(mediaType = "text/csv")),
+            @ApiResponse(responseCode = "400", description = "Periode invalide ou superieure a 366 jours",
+                    content = @Content(examples = @ExampleObject(
+                            value = "{\"status\":400,\"error\":\"Bad Request\",\"message\":\"Periode maximale d'export depassee (366 jours)\"}"))),
+            @ApiResponse(responseCode = "403", description = "Role different de ADMIN", content = @Content)
+    })
     @GetMapping({"/api/admin/transactions/export", "/api/admin/transactions/export-csv"})
     public ResponseEntity<byte[]> exporterTransactionsCsv(
-            @RequestParam(required = false) Long clientId,
-            @RequestParam(required = false) Long compteId,
+            @Parameter(description = "Filtrer sur un client", example = "1005") @RequestParam(required = false) Long clientId,
+            @Parameter(description = "Filtrer sur un compte", example = "2001") @RequestParam(required = false) Long compteId,
+            @Parameter(description = "Debut de periode", example = "2026-01-01")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate du,
+            @Parameter(description = "Fin de periode", example = "2026-12-31")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate au,
+            @Parameter(description = "Sens du mouvement", example = "CREDIT")
             @RequestParam(required = false) SensTransaction sens,
             Authentication authentication) {
 

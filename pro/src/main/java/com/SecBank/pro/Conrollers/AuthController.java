@@ -5,6 +5,14 @@ import com.SecBank.pro.Dtos.ResetPasswordDTO;
 import com.SecBank.pro.Models.Utilisateur;
 import com.SecBank.pro.Services.AuthService;
 import com.SecBank.pro.Services.ReinitialisationMotDePasseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -24,6 +32,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentification", description = "Inscription, connexion et deconnexion. Routes publiques.")
 public class AuthController {
 
     private static final String COOKIE_SESSION = "session";
@@ -40,6 +49,14 @@ public class AuthController {
         this.reinitialisationService = reinitialisationService;
     }
 
+    @Operation(summary = "Inscrire un nouveau client",
+            description = "Cree le client puis ouvre une session : jeton JWT dans le corps (`token`) et cookie httpOnly `session`.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Compte cree, jeton renvoye"),
+            @ApiResponse(responseCode = "400", description = "Email deja utilise ou donnees invalides",
+                    content = @Content(examples = @ExampleObject(value = "{\"erreur\":\"Email deja utilise\"}")))
+    })
+    @SecurityRequirements
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> inscription(@RequestBody InscriptionRequete requete) {
         try {
@@ -51,6 +68,15 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "Se connecter et obtenir un jeton JWT",
+            description = "Renvoie `{email, nom, role, token}`. Le role vaut ADMIN, CLIENT ou AGENT_SUPPORT.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Authentification reussie"),
+            @ApiResponse(responseCode = "401", description = "Email ou mot de passe incorrect",
+                    content = @Content(examples = @ExampleObject(
+                            value = "{\"erreur\":\"Email ou mot de passe incorrect\"}")))
+    })
+    @SecurityRequirements
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> connexion(@RequestBody ConnexionRequete requete) {
         if (!authService.seConnecter(requete.email(), requete.motDePasse())) {
@@ -62,6 +88,10 @@ public class AuthController {
         return reponseAvecSession(utilisateur);
     }
 
+    @Operation(summary = "Se deconnecter",
+            description = "Vide le cookie de session. Le jeton reste valable jusqu'a expiration cote client : le supprimer cote appelant.")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Session fermee"))
+    @SecurityRequirements
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> deconnexion() {
         authService.seDeconnecter();
@@ -114,10 +144,17 @@ public class AuthController {
                 .body(corps);
     }
 
-    public record InscriptionRequete(String email, String motDePasse, String nom) {
+    @Schema(name = "InscriptionRequete", description = "Donnees d'inscription")
+    public record InscriptionRequete(
+            @Schema(example = "nouveau.client@demo.bankati.test") String email,
+            @Schema(example = "Client1234!") String motDePasse,
+            @Schema(example = "Nouveau Client") String nom) {
     }
 
-    public record ConnexionRequete(String email, String motDePasse) {
+    @Schema(name = "ConnexionRequete", description = "Identifiants de connexion")
+    public record ConnexionRequete(
+            @Schema(example = "client.demo1@demo.bankati.test") String email,
+            @Schema(example = "Client1234!") String motDePasse) {
     }
 
     public record DemandeReinitialisationRequete(String email) {

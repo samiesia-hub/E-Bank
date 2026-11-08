@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
@@ -41,6 +43,17 @@ public class SecurityConfig {
     }
 
     /**
+     * L'authentification passe uniquement par le JWT (AuthService). Sans ce bean,
+     * Spring Boot cree un utilisateur "user" par defaut et journalise son mot de
+     * passe genere au demarrage : un secret dans les logs, inutile ici.
+     * Un magasin vide desactive cet utilisateur par defaut sans toucher au reste.
+     */
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new InMemoryUserDetailsManager();
+    }
+
+    /**
      * Autorise le frontend Next.js local à envoyer le cookie de session.
      */
     @Bean
@@ -70,6 +83,9 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(requetes -> requetes
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Documentation OpenAPI et Swagger UI : lecture publique, aucune donnee metier.
+                        .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml",
+                                "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Sans cela, une erreur (404, 500...) repart en 401 : la page /error
                         // est protégée et le filtre JWT ignore les dispatches d'erreur.
                         .requestMatchers("/error").permitAll()

@@ -30,6 +30,8 @@
 	<properties>
 		<java.version>21</java.version>
 		<jjwt.version>0.12.6</jjwt.version>
+		<!-- springdoc 3.x : seule ligne compatible Spring Boot 4.1.x -->
+		<springdoc.version>3.2.0</springdoc.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencies>
@@ -41,12 +43,29 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
+		<!-- Documentation OpenAPI (/v3/api-docs) et Swagger UI (/swagger-ui.html) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+		<!-- Migrations versionnees (db/migration) : schema reproductible sur base vide.
+		     Spring Boot 4 modularise les auto-configurations : sans ce starter, les
+		     proprietes spring.flyway.* sont ignorees. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
