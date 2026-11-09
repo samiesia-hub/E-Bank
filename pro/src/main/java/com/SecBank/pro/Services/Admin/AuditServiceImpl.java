@@ -26,9 +26,16 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     public JournalAudit journaliser(String action, Utilisateur utilisateur, String details) {
+        return journaliser(action, utilisateur, details, null);
+    }
+
+    @Override
+    public JournalAudit journaliser(String action, Utilisateur utilisateur, String details, String adresseIp) {
         JournalAudit entree = new JournalAudit();
         entree.setAction(action);
-        entree.setDetails(details);
+        entree.setDetails(adresseIp == null || adresseIp.isBlank()
+                ? details
+                : details + " | ip : " + adresseIp);
         entree.setUtilisateur(utilisateur);
         // Horodatage de l'action, genere cote serveur.
         entree.setDateAction(LocalDateTime.now());
