@@ -1,6 +1,7 @@
 package com.SecBank.pro.Conrollers.Clients;
 
-
+import com.SecBank.pro.Dtos.CreerReclamationRequest;
+import com.SecBank.pro.Dtos.ReclamationResponse;
 import com.SecBank.pro.Models.Cliens.Reclamation;
 import com.SecBank.pro.Services.Clients.ReclamationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,10 +13,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+/**
+ * Réclamations du client connecté. Le client est identifié par l'email du token JWT,
+ * jamais par un identifiant transmis par l'appelant.
+ */
 @RestController
-@RequestMapping("/api/reclamations")
+@RequestMapping("/api/client/reclamations")
 @Tag(name = "Reclamations", description = "Creation et suivi des reclamations client.")
 public class ReclamationController {
 
@@ -36,18 +49,21 @@ public class ReclamationController {
             @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Reclamation> creerReclamation(
-            @Parameter(description = "Identifiant du client", example = "1005") @RequestParam Long clientId,
-            @Parameter(description = "Objet de la reclamation", example = "Frais bancaires inattendus")
-            @RequestParam String objet,
-            @Parameter(description = "Description detaillee", example = "Des frais ont ete preleves deux fois en octobre.")
-            @RequestParam String description) {
-
+    public ResponseEntity<ReclamationResponse> creerReclamation(@RequestBody CreerReclamationRequest requete,
+                                                                Authentication authentication) {
         Reclamation reclamation = reclamationService.creerReclamation(
-                clientId, objet, description
-        );
+                authentication.getName(), requete.objet(), requete.message());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ReclamationResponse.depuis(reclamation));
+    }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(reclamation);
+    @GetMapping
+    public ResponseEntity<List<ReclamationResponse>> mesReclamations(Authentication authentication) {
+        List<ReclamationResponse> reclamations = reclamationService
+                .listerReclamationsDuClient(authentication.getName())
+                .stream()
+                .map(ReclamationResponse::depuis)
+                .toList();
+        return ResponseEntity.ok(reclamations);
     }
 
     @Operation(summary = "Suivre une reclamation",
@@ -59,11 +75,9 @@ public class ReclamationController {
             @ApiResponse(responseCode = "401", description = "Jeton absent ou invalide", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<Reclamation> suivreReclamation(
-            @Parameter(description = "Identifiant de la reclamation", example = "4001") @PathVariable Long id) {
-
-        Reclamation reclamation = reclamationService.suivreReclamation(id);
-
-        return ResponseEntity.ok(reclamation);
+    public ResponseEntity<ReclamationResponse> suivreReclamation(@PathVariable Long id,
+                                                                 Authentication authentication) {
+        Reclamation reclamation = reclamationService.consulterReclamationDuClient(id, authentication.getName());
+        return ResponseEntity.ok(ReclamationResponse.depuis(reclamation));
     }
 }

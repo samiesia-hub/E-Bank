@@ -18,7 +18,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
+import com.SecBank.pro.Services.ReinitialisationMotDePasseService;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 @WebMvcTest(AuthController.class)
 @Import({SecurityConfig.class, JwtService.class})
 class AuthControllerTest {
@@ -28,6 +32,9 @@ class AuthControllerTest {
 
     @Autowired
     private JwtService jwtService;
+
+    @MockitoBean
+    private ReinitialisationMotDePasseService reinitialisationService;
 
     @MockitoBean
     private AuthService authService;
@@ -110,4 +117,35 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/comptes").header("Authorization", "Bearer faux-token"))
                 .andExpect(status().isUnauthorized());
     }
+
+
+    @Test
+    void motDePasseOublie_repondToujours200SansRevelerLExistenceDuCompte() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"inconnu@example.com"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        verify(reinitialisationService).demanderReinitialisation("inconnu@example.com");
+    }
+
+    @Test
+    void reinitialiserMotDePasse_codeInvalide_retourne400() throws Exception {
+        doThrow(new DonneeInvalideException("Code invalide ou expiré"))
+                .when(reinitialisationService)
+                .reinitialiserMotDePasse("sami@example.com", "000000", "NouveauMotDePasse2");
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"sami@example.com","code":"000000","nouveauMotDePasse":"NouveauMotDePasse2"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Code invalide ou expiré"));
+    }
+
+
 }
