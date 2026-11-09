@@ -93,6 +93,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Espace client : le token doit porter le role CLIENT.
                         .requestMatchers("/api/client/**").hasRole("CLIENT")
+                        // Espace support : le token porte AGENT_SUPPORT pour un agent
+                        // (voir AuthService.rolePourToken) ; un admin y a aussi acces.
+                        .requestMatchers("/api/support/**").hasAnyRole("AGENT_SUPPORT", "ADMIN")
+                        .requestMatchers("/api/virements/**").hasRole("CLIENT")
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

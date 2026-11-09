@@ -1,138 +1,132 @@
 package com.SecBank.pro.Controller.Client;
 
 import com.SecBank.pro.Conrollers.Clients.ReclamationController;
-import com.SecBank.pro.Models.Admin.AgentSupport;
-import com.SecBank.pro.Models.Admin.TicketSupport;
-import com.SecBank.pro.Models.Cliens.Beneficiaire;
+import com.SecBank.pro.Exceptions.AccesRefuseException;
+import com.SecBank.pro.Exceptions.DonneeInvalideException;
 import com.SecBank.pro.Models.Cliens.Client;
-import com.SecBank.pro.Models.Cliens.CompteBancaire;
 import com.SecBank.pro.Models.Cliens.Reclamation;
-import com.SecBank.pro.Models.Cliens.ResponseReclamation;
 import com.SecBank.pro.Models.Enums.StatusReclamation;
-import com.SecBank.pro.Models.Enums.StatusTicket;
 import com.SecBank.pro.Services.Clients.ReclamationService;
-
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @WebMvcTest(ReclamationController.class)
 class ReclamationControllerTest {
+
+    private static final String EMAIL = "jean@example.com";
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private ReclamationService reclamationService;
+
     @Test
-    void testCreerReclamation() throws Exception {
-
-        Reclamation reclamation = new Reclamation();
-        reclamation.setId(1L);
-        reclamation.setObjet("Problème de virement");
-        reclamation.setDesciprtion("Mon virement n'a pas été effectué.");
-        reclamation.setDateCreation(new Date());
-
+    void creerReclamation_valide_retourne201EnCours() throws Exception {
         when(reclamationService.creerReclamation(
-                1L,
-                "Problème de virement",
-                "Mon virement n'a pas été effectué."
-        )).thenReturn(reclamation);
+                EMAIL, "Problème de virement", "Mon virement n'a pas été effectué."))
+                .thenReturn(reclamation(1L, "Problème de virement",
+                        "Mon virement n'a pas été effectué.", StatusReclamation.EN_COURS));
 
-        mockMvc.perform(post("/api/reclamations")
-                        .param("clientId", "1")
-                        .param("objet", "Problème de virement")
-                        .param("description", "Mon virement n'a pas été effectué.")
-                        .contentType(MediaType.APPLICATION_JSON))
-
+        mockMvc.perform(post("/api/client/reclamations")
+                        .principal(principal())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"objet\":\"Problème de virement\",\"message\":\"Mon virement n'a pas été effectué.\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.objet").value("Problème de virement"));
+                .andExpect(jsonPath("$.objet").value("Problème de virement"))
+                .andExpect(jsonPath("$.message").value("Mon virement n'a pas été effectué."))
+                .andExpect(jsonPath("$.statut").value("EN_COURS"))
+                .andExpect(jsonPath("$.dateCreation").exists());
     }
 
     @Test
-    void testSuivreReclamation() throws Exception {
+    void creerReclamation_messageTropCourt_retourne400() throws Exception {
+        when(reclamationService.creerReclamation(eq(EMAIL), any(), any()))
+                .thenThrow(new DonneeInvalideException("Le message doit contenir au moins 10 caractères"));
 
-        Reclamation reclamation = new Reclamation();
-        reclamation.setId(1L);
-        reclamation.setObjet("Problème de carte");
+        mockMvc.perform(post("/api/client/reclamations")
+                        .principal(principal())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"objet\":\"Objet\",\"message\":\"court\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Le message doit contenir au moins 10 caractères"));
+    }
 
-        when(reclamationService.suivreReclamation(1L))
-                .thenReturn(reclamation);
+    @Test
+    void mesReclamations_listeCellesDuClientConnecte() throws Exception {
+        when(reclamationService.listerReclamationsDuClient(EMAIL)).thenReturn(List.of(
+                reclamation(2L, "Carte avalée", "Ma carte a été avalée au distributeur.", StatusReclamation.EN_COURS),
+                reclamation(1L, "Frais", "Des frais inattendus ont été prélevés.", StatusReclamation.RESOLUE)));
 
-        mockMvc.perform(get("/api/reclamations/1"))
-
+        mockMvc.perform(get("/api/client/reclamations").principal(principal()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.objet").value("Problème de carte"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[1].statut").value("RESOLUE"));
+    }
+
+    @Test
+    void suivreReclamation_autreClient_retourne403() throws Exception {
+        when(reclamationService.consulterReclamationDuClient(7L, EMAIL))
+                .thenThrow(new AccesRefuseException("Cette réclamation n'appartient pas au client connecté"));
+
+        mockMvc.perform(get("/api/client/reclamations/7").principal(principal()))
+                .andExpect(status().isForbidden());
     }
 
     /**
-     * Regression : avec un graphe complet (client, comptes, beneficiaires, ticket,
-     * reponses), la serialisation bouclait et le corps de la reponse etait perdu
-     * ("Document nesting depth (501) exceeds the maximum allowed (500)").
+     * Remplace l'ancien test de régression (boucle JSON client -> comptes -> ...) :
+     * la réponse est maintenant un DTO, qui n'expose ni le client ni le ticket.
      */
     @Test
-    @DisplayName("Given une reclamation reliee a son client, ses comptes et son ticket, Then le JSON reste serialisable")
-    void serialisationAvecGrapheCompletNeBouclePas() throws Exception {
+    void suivreReclamation_neRenvoiePasLeClientNiLeTicket() throws Exception {
         Client client = new Client();
-        client.setEmail("client.demo1@demo.bankati.test");
-        client.setNom("Client Demo 1");
-
-        CompteBancaire compte = new CompteBancaire();
-        compte.setId(2001L);
-        compte.setNumeroCompte("1000000000001");
-        compte.setClient(client);
-        client.setCompteBancaires(List.of(compte));
-
-        Beneficiaire beneficiaire = new Beneficiaire();
-        beneficiaire.setNom("Beneficiaire de test");
-        beneficiaire.setClient(client);
-        client.setBeneficiaires(List.of(beneficiaire));
-
-        AgentSupport agent = new AgentSupport();
-        agent.setNom("Agent Support Demo 1");
-
-        Reclamation reclamation = new Reclamation();
-        reclamation.setId(4001L);
-        reclamation.setObjet("Frais bancaires inattendus");
-        reclamation.setStatus(StatusReclamation.EN_COURS);
+        client.setEmail(EMAIL);
+        client.setPassword("hash-secret");
+        Reclamation reclamation = reclamation(4001L, "Frais bancaires",
+                "Des frais inattendus ont été prélevés.", StatusReclamation.EN_COURS);
         reclamation.setClient(client);
-        reclamation.setAgentsupp(agent);
+        when(reclamationService.consulterReclamationDuClient(4001L, EMAIL)).thenReturn(reclamation);
 
-        TicketSupport ticket = new TicketSupport();
-        ticket.setId(5001L);
-        ticket.setStatus(StatusTicket.EN_TRAITEMENT);
-        ticket.setReclamation(reclamation);
-        reclamation.setTicketSupport(ticket);
-
-        ResponseReclamation reponse = new ResponseReclamation();
-        reponse.setId(6001L);
-        reponse.setContenu("Bonjour, nous traitons votre demande.");
-        reponse.setReclamation(reclamation);
-        reclamation.setResponseReclamations(List.of(reponse));
-
-        when(reclamationService.suivreReclamation(4001L)).thenReturn(reclamation);
-
-        mockMvc.perform(get("/api/reclamations/4001"))
+        mockMvc.perform(get("/api/client/reclamations/4001").principal(principal()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.objet").value("Frais bancaires inattendus"))
-                .andExpect(jsonPath("$.status").value("EN_COURS"))
-                .andExpect(jsonPath("$.client.nom").value("Client Demo 1"))
-                .andExpect(jsonPath("$.ticketSupport.status").value("EN_TRAITEMENT"))
-                .andExpect(jsonPath("$.responseReclamations[0].contenu")
-                        .value("Bonjour, nous traitons votre demande."))
-                .andExpect(jsonPath("$.client.compteBancaires").doesNotExist());
+                .andExpect(jsonPath("$.objet").value("Frais bancaires"))
+                .andExpect(jsonPath("$.client").doesNotExist())
+                .andExpect(jsonPath("$.ticketSupport").doesNotExist())
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    private static Principal principal() {
+        return new UsernamePasswordAuthenticationToken(
+                EMAIL, null, List.of(new SimpleGrantedAuthority("ROLE_CLIENT")));
+    }
+
+    private static Reclamation reclamation(Long id, String objet, String message, StatusReclamation statut) {
+        Reclamation reclamation = new Reclamation();
+        reclamation.setId(id);
+        reclamation.setObjet(objet);
+        reclamation.setDesciprtion(message);
+        reclamation.setStatus(statut);
+        reclamation.setDateCreation(new Date());
+        return reclamation;
     }
 }
