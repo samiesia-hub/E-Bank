@@ -86,6 +86,12 @@ public class SecurityConfig {
                         // Documentation OpenAPI et Swagger UI : lecture publique, aucune donnee metier.
                         .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml",
                                 "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/refresh",
+                                "/api/auth/logout"
+                        ).permitAll()
                         // Sans cela, une erreur (404, 500...) repart en 401 : la page /error
                         // est protégée et le filtre JWT ignore les dispatches d'erreur.
                         .requestMatchers("/error").permitAll()
