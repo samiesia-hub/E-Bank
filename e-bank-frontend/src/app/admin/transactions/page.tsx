@@ -165,7 +165,7 @@ export default function PageTransactionsAdmin() {
       <div className="flex flex-wrap items-end justify-between gap-space-md">
         <div>
           <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-            Bankati — Transactions
+            Ora Bank — Transactions
           </p>
           <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">Transactions</h1>
           <p className="mt-space-sm max-w-2xl font-body-md text-body-md text-neutral-core">

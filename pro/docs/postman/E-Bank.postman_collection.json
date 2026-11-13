@@ -53,7 +53,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin.demo1@demo.bankati.test\",\n  \"motDePasse\": \"Admin1234!\"\n}"
+              "raw": "{\n  \"email\": \"admin.demo1@demo.orabank.test\",\n  \"motDePasse\": \"Admin1234!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
@@ -95,7 +95,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"client.demo1@demo.bankati.test\",\n  \"motDePasse\": \"Client1234!\"\n}"
+              "raw": "{\n  \"email\": \"client.demo1@demo.orabank.test\",\n  \"motDePasse\": \"Client1234!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
@@ -137,7 +137,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"agent.demo1@demo.bankati.test\",\n  \"motDePasse\": \"Agent1234!\"\n}"
+              "raw": "{\n  \"email\": \"agent.demo1@demo.orabank.test\",\n  \"motDePasse\": \"Agent1234!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
@@ -176,7 +176,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"client.demo1@demo.bankati.test\",\n  \"motDePasse\": \"mauvais-mot-de-passe\"\n}"
+              "raw": "{\n  \"email\": \"client.demo1@demo.orabank.test\",\n  \"motDePasse\": \"mauvais-mot-de-passe\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",

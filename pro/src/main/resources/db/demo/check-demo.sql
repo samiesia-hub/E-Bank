@@ -7,7 +7,7 @@
 --        -v ON_ERROR_STOP=1 -f /tmp/ebank-demo/check-demo.sql
 --
 --  Toutes les verifications sont limitees aux donnees de demonstration
---  (domaine @demo.bankati.test et identifiants reserves), le script peut
+--  (domaine @demo.orabank.test et identifiants reserves), le script peut
 --  donc etre execute sur une base de developpement contenant d'autres
 --  lignes. La colonne "verdict" doit valoir OK partout.
 -- =====================================================================
@@ -20,7 +20,7 @@ SELECT controle, attendu, obtenu,
        CASE WHEN attendu IS NOT DISTINCT FROM obtenu THEN 'OK' ELSE 'ECHEC' END AS verdict
 FROM (
     SELECT 'utilisateurs de demo' AS controle, 9::bigint AS attendu,
-           (SELECT count(*) FROM utilisateur WHERE email LIKE '%@demo.bankati.test') AS obtenu
+           (SELECT count(*) FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test') AS obtenu
     UNION ALL
     SELECT 'comptes de demo', 8,
            (SELECT count(*) FROM compte_bancaire WHERE id BETWEEN 2001 AND 2008)
@@ -91,7 +91,7 @@ FROM (
     SELECT 'e-mails de demo en doublon', 0,
            (SELECT count(*) FROM (
                 SELECT email FROM utilisateur
-                 WHERE email LIKE '%@demo.bankati.test'
+                 WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test'
                  GROUP BY email HAVING count(*) > 1) d)
     UNION ALL
     -- RIB synthetiques valides : (numero * 100 + cle) doit etre multiple de 97.
@@ -104,7 +104,7 @@ FROM (
     SELECT 'clients de demo sans compte', 0,
            (SELECT count(*) FROM client cl
               JOIN utilisateur u ON u.id_utilisateur = cl.user_id
-             WHERE u.email LIKE 'client.demo%@demo.bankati.test'
+             WHERE u.email LIKE 'client.demo%@demo.orabank.test'
                AND NOT EXISTS (SELECT 1 FROM compte_bancaire cb WHERE cb.client_id = cl.user_id))
     UNION ALL
     SELECT 'comptes de demo a historique vide', 0,
@@ -133,7 +133,7 @@ SELECT u.email,
   JOIN utilisateur u ON u.id_utilisateur = cl.user_id
   JOIN compte_bancaire cb ON cb.client_id = cl.user_id
   LEFT JOIN transaction t ON t.compte_id = cb.id
- WHERE u.email LIKE 'client.demo%@demo.bankati.test'
+ WHERE u.email LIKE 'client.demo%@demo.orabank.test'
  GROUP BY u.email, cb.id, cb.type_compte, cb.statut_compte, cb.solde
  ORDER BY u.email, cb.id;
 

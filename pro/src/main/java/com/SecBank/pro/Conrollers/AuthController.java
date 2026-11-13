@@ -146,14 +146,14 @@ public class AuthController {
 
     @Schema(name = "InscriptionRequete", description = "Donnees d'inscription")
     public record InscriptionRequete(
-            @Schema(example = "nouveau.client@demo.bankati.test") String email,
+            @Schema(example = "nouveau.client@demo.orabank.test") String email,
             @Schema(example = "Client1234!") String motDePasse,
             @Schema(example = "Nouveau Client") String nom) {
     }
 
     @Schema(name = "ConnexionRequete", description = "Identifiants de connexion")
     public record ConnexionRequete(
-            @Schema(example = "client.demo1@demo.bankati.test") String email,
+            @Schema(example = "client.demo1@demo.orabank.test") String email,
             @Schema(example = "Client1234!") String motDePasse) {
     }
 

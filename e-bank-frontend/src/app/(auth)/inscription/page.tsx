@@ -83,7 +83,7 @@ export default function PageInscription() {
       router.refresh();
     } catch {
       // Backend éteint : le compte est gardé dans le navigateur (mode démonstration).
-      const CLE_COMPTES = "bankati.comptes-demo";
+      const CLE_COMPTES = "ora-bank.comptes-demo";
       const enregistres = JSON.parse(localStorage.getItem(CLE_COMPTES) ?? "[]");
       localStorage.setItem(
         CLE_COMPTES,

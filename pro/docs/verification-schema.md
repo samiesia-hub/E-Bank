@@ -93,7 +93,7 @@ Hibernate). La structure est identique.
 
 1. **`seed-demo.sql` échouait** si des entrées d'audit existaient pour les utilisateurs de démo
    (`update or delete on table "utilisateur" violates foreign key constraint ... on table
-   "journal_audit"`). Le seed purge désormais `journal_audit` (portée `@demo.bankati.test`) avant
+   "journal_audit"`). Le seed purge désormais `journal_audit` (portée `@demo.orabank.test`) avant
    de supprimer les utilisateurs. Vérifié : deux exécutions successives **OK** avec 2 entrées
    d'audit présentes.
 2. **`check-demo.sql` comptait** les virements et opérations au guichet **globalement** (14 et 13)

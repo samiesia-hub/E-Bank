@@ -169,7 +169,7 @@ export default function PageComptesBancaires() {
     <main className="flex flex-col gap-space-xl px-margin py-space-xl">
       <div>
         <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-          Bankati — Comptes bancaires
+          Ora Bank — Comptes bancaires
         </p>
         <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">Comptes bancaires</h1>
         <p className="mt-space-sm max-w-2xl font-body-md text-body-md text-neutral-core">

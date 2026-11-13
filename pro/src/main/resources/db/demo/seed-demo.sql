@@ -9,8 +9,10 @@
 --   * 5 reclamations et 5 tickets support avec des statuts varies
 --
 -- Idempotent : les lignes de demonstration sont identifiees par le domaine
--- d'e-mail reserve @demo.bankati.test (RFC 2606) et supprimees avant
--- reinsertion. Deux executions successives donnent donc le meme etat.
+-- d'e-mail reserve @demo.orabank.test (RFC 2606) et supprimees avant
+-- reinsertion. L'ancien domaine @demo.bankati.test est purge lui aussi pour
+-- que les bases deja initialisees restent rejouables. Deux executions
+-- successives donnent donc le meme etat.
 --
 -- Securite : donnees strictement synthetiques. Les mots de passe sont des
 -- hashes BCrypt de mots de passe de test documentes dans pro/README.md et
@@ -31,40 +33,40 @@ DELETE FROM documentkyc
                         FROM dossierkyc d
                         JOIN client c ON c.user_id = d.client_id
                         JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                       WHERE u.email LIKE '%@demo.bankati.test');
+                       WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM dossierkyc
  WHERE client_id IN (SELECT c.user_id
                        FROM client c
                        JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                      WHERE u.email LIKE '%@demo.bankati.test');
+                      WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM releve
  WHERE compte_id IN (SELECT cb.id
                        FROM compte_bancaire cb
                        JOIN client c ON c.user_id = cb.client_id
                        JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                      WHERE u.email LIKE '%@demo.bankati.test');
+                      WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM beneficiaire
  WHERE client_id IN (SELECT c.user_id
                        FROM client c
                        JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                      WHERE u.email LIKE '%@demo.bankati.test');
+                      WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM response_reclamation
  WHERE reclamation_id IN (SELECT r.id
                             FROM reclamation r
                             JOIN client c ON c.user_id = r.client_id
                             JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                           WHERE u.email LIKE '%@demo.bankati.test');
+                           WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM ticket_support
  WHERE reclamation_id IN (SELECT r.id
                             FROM reclamation r
                             JOIN client c ON c.user_id = r.client_id
                             JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                           WHERE u.email LIKE '%@demo.bankati.test');
+                           WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM operation_guichet
  WHERE transaction_id IN (SELECT t.id
@@ -72,7 +74,7 @@ DELETE FROM operation_guichet
                             JOIN compte_bancaire cb ON cb.id = t.compte_id
                             JOIN client c ON c.user_id = cb.client_id
                             JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                           WHERE u.email LIKE '%@demo.bankati.test');
+                           WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM virement
  WHERE transaction_id IN (SELECT t.id
@@ -80,7 +82,7 @@ DELETE FROM virement
                             JOIN compte_bancaire cb ON cb.id = t.compte_id
                             JOIN client c ON c.user_id = cb.client_id
                             JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                           WHERE u.email LIKE '%@demo.bankati.test');
+                           WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM transaction
  WHERE id IN (SELECT t.id
@@ -88,39 +90,39 @@ DELETE FROM transaction
                 JOIN compte_bancaire cb ON cb.id = t.compte_id
                 JOIN client c ON c.user_id = cb.client_id
                 JOIN utilisateur u ON u.id_utilisateur = c.user_id
-               WHERE u.email LIKE '%@demo.bankati.test');
+               WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM reclamation
  WHERE client_id IN (SELECT c.user_id
                        FROM client c
                        JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                      WHERE u.email LIKE '%@demo.bankati.test');
+                      WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 DELETE FROM compte_bancaire
  WHERE client_id IN (SELECT c.user_id
                        FROM client c
                        JOIN utilisateur u ON u.id_utilisateur = c.user_id
-                      WHERE u.email LIKE '%@demo.bankati.test');
+                      WHERE u.email LIKE '%@demo.bankati.test' OR u.email LIKE '%@demo.orabank.test');
 
 -- Detache les lignes reelles eventuellement assignees a un agent de demo
 -- avant de supprimer ces agents (sinon la suppression serait bloquee).
 UPDATE reclamation SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 UPDATE ticket_support SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 UPDATE operation_guichet SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 UPDATE dossierkyc SET admin_id = NULL
- WHERE admin_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE admin_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 
 DELETE FROM client
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 
 DELETE FROM agent_support
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 
 DELETE FROM administrateur
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 
 -- Les entrees d'audit (export CSV, operations au guichet, ...) referencent les
 -- utilisateurs de demo : elles partent avant eux (la cle etrangere n'a pas de
@@ -128,24 +130,24 @@ DELETE FROM administrateur
 DELETE FROM journal_audit
  WHERE utilisateur_id IN (SELECT id_utilisateur
                             FROM utilisateur
-                           WHERE email LIKE '%@demo.bankati.test');
+                           WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test');
 
-DELETE FROM utilisateur WHERE email LIKE '%@demo.bankati.test';
+DELETE FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.orabank.test';
 
 -- ---------------------------------------------------------------------
 -- 2. Utilisateurs
 --    Mots de passe : Admin1234! / Agent1234! / Client1234!
 -- ---------------------------------------------------------------------
 INSERT INTO utilisateur (id_utilisateur, cin, actif, doubleauth_active, email, nom, password, role, telephone, username) VALUES
-    (1001, 'DEMO0001', TRUE, FALSE, 'admin.demo1@demo.bankati.test',  'Administrateur Demo 1', '$2a$10$bFcFudMg3TgWXK8a4qFf6.4Kk.EXK1b9IJGU4peu26T4YUGQYvNtq', 'ADMIN',   612000101, 'admin.demo1@demo.bankati.test'),
-    (1002, 'DEMO0002', TRUE, FALSE, 'admin.demo2@demo.bankati.test',  'Administrateur Demo 2', '$2a$10$bFcFudMg3TgWXK8a4qFf6.4Kk.EXK1b9IJGU4peu26T4YUGQYvNtq', 'ADMIN',   612000102, 'admin.demo2@demo.bankati.test'),
-    (1003, 'DEMO0003', TRUE, FALSE, 'agent.demo1@demo.bankati.test',  'Agent Support Demo 1',  '$2a$10$1za7ZYyZuEI8XYnMXRRM5.SC4D5AAfWnTPlBXEF8v5eLpxsOTA22O', 'SUPPORT', 612000103, 'agent.demo1@demo.bankati.test'),
-    (1004, 'DEMO0004', TRUE, FALSE, 'agent.demo2@demo.bankati.test',  'Agent Support Demo 2',  '$2a$10$1za7ZYyZuEI8XYnMXRRM5.SC4D5AAfWnTPlBXEF8v5eLpxsOTA22O', 'SUPPORT', 612000104, 'agent.demo2@demo.bankati.test'),
-    (1005, 'DEMO0005', TRUE, FALSE, 'client.demo1@demo.bankati.test', 'Client Demo 1',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000105, 'client.demo1@demo.bankati.test'),
-    (1006, 'DEMO0006', TRUE, FALSE, 'client.demo2@demo.bankati.test', 'Client Demo 2',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000106, 'client.demo2@demo.bankati.test'),
-    (1007, 'DEMO0007', TRUE, FALSE, 'client.demo3@demo.bankati.test', 'Client Demo 3',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000107, 'client.demo3@demo.bankati.test'),
-    (1008, 'DEMO0008', TRUE, FALSE, 'client.demo4@demo.bankati.test', 'Client Demo 4',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000108, 'client.demo4@demo.bankati.test'),
-    (1009, 'DEMO0009', TRUE, FALSE, 'client.demo5@demo.bankati.test', 'Client Demo 5',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000109, 'client.demo5@demo.bankati.test');
+    (1001, 'DEMO0001', TRUE, FALSE, 'admin.demo1@demo.orabank.test',  'Administrateur Demo 1', '$2a$10$bFcFudMg3TgWXK8a4qFf6.4Kk.EXK1b9IJGU4peu26T4YUGQYvNtq', 'ADMIN',   612000101, 'admin.demo1@demo.orabank.test'),
+    (1002, 'DEMO0002', TRUE, FALSE, 'admin.demo2@demo.orabank.test',  'Administrateur Demo 2', '$2a$10$bFcFudMg3TgWXK8a4qFf6.4Kk.EXK1b9IJGU4peu26T4YUGQYvNtq', 'ADMIN',   612000102, 'admin.demo2@demo.orabank.test'),
+    (1003, 'DEMO0003', TRUE, FALSE, 'agent.demo1@demo.orabank.test',  'Agent Support Demo 1',  '$2a$10$1za7ZYyZuEI8XYnMXRRM5.SC4D5AAfWnTPlBXEF8v5eLpxsOTA22O', 'SUPPORT', 612000103, 'agent.demo1@demo.orabank.test'),
+    (1004, 'DEMO0004', TRUE, FALSE, 'agent.demo2@demo.orabank.test',  'Agent Support Demo 2',  '$2a$10$1za7ZYyZuEI8XYnMXRRM5.SC4D5AAfWnTPlBXEF8v5eLpxsOTA22O', 'SUPPORT', 612000104, 'agent.demo2@demo.orabank.test'),
+    (1005, 'DEMO0005', TRUE, FALSE, 'client.demo1@demo.orabank.test', 'Client Demo 1',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000105, 'client.demo1@demo.orabank.test'),
+    (1006, 'DEMO0006', TRUE, FALSE, 'client.demo2@demo.orabank.test', 'Client Demo 2',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000106, 'client.demo2@demo.orabank.test'),
+    (1007, 'DEMO0007', TRUE, FALSE, 'client.demo3@demo.orabank.test', 'Client Demo 3',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000107, 'client.demo3@demo.orabank.test'),
+    (1008, 'DEMO0008', TRUE, FALSE, 'client.demo4@demo.orabank.test', 'Client Demo 4',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000108, 'client.demo4@demo.orabank.test'),
+    (1009, 'DEMO0009', TRUE, FALSE, 'client.demo5@demo.orabank.test', 'Client Demo 5',         '$2a$10$yVcIcqr1RjDuF0b0jxY9DeEUCoVakRYoFLT56M8SCVV0fifuJI6rC', 'CLIENT',  612000109, 'client.demo5@demo.orabank.test');
 
 INSERT INTO administrateur (matricule, niveux_acce, user_id) VALUES
     ('ADM-DEMO-01', 1, 1001),

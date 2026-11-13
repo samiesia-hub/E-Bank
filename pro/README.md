@@ -130,7 +130,7 @@ Le jeu de données de démonstration est fourni sous forme de scripts SQL, dans
 
 | Fichier | Rôle |
 | --- | --- |
-| `seed-demo.sql` | Insère les données de démo. **Idempotent** : les lignes de démonstration (domaine d'e-mail réservé `@demo.bankati.test`) sont supprimées puis réinsérées, deux exécutions donnent donc le même état. |
+| `seed-demo.sql` | Insère les données de démo. **Idempotent** : les lignes de démonstration (domaine d'e-mail réservé `@demo.orabank.test`) sont supprimées puis réinsérées, deux exécutions donnent donc le même état. |
 | `reset-demo.sql` | `TRUNCATE` de toutes les tables (séquences remises à zéro) puis rechargement du seed. Efface **toutes** les données : base de développement uniquement. |
 
 Contenu inséré : 2 administrateurs, 2 agents support, 5 clients, 8 comptes (courant, épargne,
@@ -161,15 +161,15 @@ docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
 
 | Rôle | E-mail | Mot de passe |
 | --- | --- | --- |
-| Administrateur | `admin.demo1@demo.bankati.test` | `Admin1234!` |
-| Administrateur | `admin.demo2@demo.bankati.test` | `Admin1234!` |
-| Agent support | `agent.demo1@demo.bankati.test` | `Agent1234!` |
-| Agent support | `agent.demo2@demo.bankati.test` | `Agent1234!` |
-| Client | `client.demo1@demo.bankati.test` | `Client1234!` |
-| Client | `client.demo2@demo.bankati.test` | `Client1234!` |
-| Client | `client.demo3@demo.bankati.test` | `Client1234!` |
-| Client | `client.demo4@demo.bankati.test` | `Client1234!` |
-| Client | `client.demo5@demo.bankati.test` | `Client1234!` |
+| Administrateur | `admin.demo1@demo.orabank.test` | `Admin1234!` |
+| Administrateur | `admin.demo2@demo.orabank.test` | `Admin1234!` |
+| Agent support | `agent.demo1@demo.orabank.test` | `Agent1234!` |
+| Agent support | `agent.demo2@demo.orabank.test` | `Agent1234!` |
+| Client | `client.demo1@demo.orabank.test` | `Client1234!` |
+| Client | `client.demo2@demo.orabank.test` | `Client1234!` |
+| Client | `client.demo3@demo.orabank.test` | `Client1234!` |
+| Client | `client.demo4@demo.orabank.test` | `Client1234!` |
+| Client | `client.demo5@demo.orabank.test` | `Client1234!` |
 
 > ⚠️ **Données de test non sécurisées.** Noms, numéros de comptes, RIB et téléphones sont
 > entièrement synthétiques, et les mots de passe ci-dessus sont publics (seuls leurs hashes
@@ -201,7 +201,7 @@ refus d'opération (dépôt/retrait → 400).
 # 1. obtenir un jeton (validite 24 h, reglable via jwt.expiration-ms)
 TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"client.demo1@demo.bankati.test","motDePasse":"Client1234!"}' | jq -r .token)
+  -d '{"email":"client.demo1@demo.orabank.test","motDePasse":"Client1234!"}' | jq -r .token)
 
 # 2. appeler l'API
 curl -s http://localhost:8080/api/client/comptes -H "Authorization: Bearer $TOKEN"

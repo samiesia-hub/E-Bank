@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 // Marketing layout — reprend la structure code.html : header navy + footer navy
@@ -10,8 +11,15 @@ export default function MiseEnPagePublique({
     <div className="flex min-h-screen flex-col bg-background">
       <header className="bg-navy text-white">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-margin">
-          <Link href="/" className="font-headline-sm text-headline-sm font-semibold">
-            Ora Bank
+          <Link href="/" className="shrink-0" aria-label="Ora Bank, accueil">
+            <Image
+              src="/logo-ora-bank-clair.png"
+              alt="Ora Bank"
+              width={525}
+              height={317}
+              priority
+              className="h-12 w-auto"
+            />
           </Link>
           <nav className="hidden items-center gap-space-lg md:flex">
             <Link href="/services" className="font-body-sm text-body-sm text-white/80 hover:text-accent-yellow">Services</Link>

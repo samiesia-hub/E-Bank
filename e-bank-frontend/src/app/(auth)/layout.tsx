@@ -1,5 +1,6 @@
 // Auth layout — split screen from designs/... (4) & (6):
 // navy brand panel on the left, form column on the right.
+import Image from "next/image";
 import { Shield } from "lucide-react";
 
 export default function MiseEnPageAuth({
@@ -12,17 +13,14 @@ export default function MiseEnPageAuth({
       {/* Brand panel — hidden below lg, the form takes the full width there. */}
       <aside className="hidden bg-navy p-space-xl text-white lg:col-span-5 lg:flex lg:flex-col lg:justify-between">
         <div className="flex items-center gap-space-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-container">
-            <Shield className="h-6 w-6 text-white" />
-          </div>
-          <div className="leading-tight">
-            <span className="block font-headline-md text-headline-md font-bold text-white">
-              Bankati
-            </span>
-            <span className="block font-label-sm text-label-sm text-surface-dim">
-              Banque Digitale
-            </span>
-          </div>
+          <Image
+            src="/logo-ora-bank-clair.png"
+            alt="Ora Bank"
+            width={525}
+            height={317}
+            priority
+            className="h-14 w-auto"
+          />
         </div>
 
         <div className="my-auto max-w-sm py-space-xl">
@@ -50,13 +48,25 @@ export default function MiseEnPageAuth({
 
         <div className="pt-space-md">
           <p className="font-label-sm text-label-sm text-surface-dim/70">
-            © 2026 Bankati S.A. Établissement de crédit agréé et régulé.
+            © 2026 Ora Bank S.A. Établissement de crédit agréé et régulé.
           </p>
         </div>
       </aside>
 
       <main className="flex min-h-screen w-full flex-col items-center justify-center p-space-md md:p-space-xl lg:col-span-7">
-        <div className="w-full max-w-md">{children}</div>
+        <div className="w-full max-w-md">
+          <div className="mb-space-lg flex justify-center lg:hidden">
+            <Image
+              src="/logo-ora-bank.png"
+              alt="Ora Bank"
+              width={525}
+              height={317}
+              priority
+              className="h-10 w-auto"
+            />
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );

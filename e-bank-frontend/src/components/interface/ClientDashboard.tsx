@@ -140,7 +140,7 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="bankati-app">
+    <div className="ora-bank-app">
       {/* BARRE SUPÉRIEURE */}
       <header className="topbar">
         <div className="topbar-brand">
@@ -154,7 +154,7 @@ export default function ClientDashboard() {
 
           <div className="brand-logo">
             <Landmark size={27} strokeWidth={2} />
-            <span>Bankati</span>
+            <span>Ora Bank</span>
           </div>
         </div>
 
@@ -522,7 +522,7 @@ export default function ClientDashboard() {
 
                   <div className="bank-card">
                     <div className="bank-card-top">
-                      <strong>Bankati</strong>
+                      <strong>Ora Bank</strong>
                       <span>Débit</span>
                     </div>
 
@@ -755,7 +755,7 @@ export default function ClientDashboard() {
             </section>
 
             <footer className="dashboard-footer">
-              <span>© 2026 Bankati. Tous droits réservés.</span>
+              <span>© 2026 Ora Bank. Tous droits réservés.</span>
               <span>Votre sécurité est notre priorité.</span>
             </footer>
           </>
@@ -838,7 +838,7 @@ export default function ClientDashboard() {
               ) : (
                 <p>
                   Cette fonctionnalité sera connectée aux services
-                  bancaires de Bankati dans une prochaine étape.
+                  bancaires de Ora Bank dans une prochaine étape.
                 </p>
               )}
             </div>

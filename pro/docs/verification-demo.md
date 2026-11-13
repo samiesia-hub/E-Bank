@@ -40,7 +40,7 @@ Exécution après le seed #1 **et** après le seed #2, résultats identiques :
 | Comptes de démo à historique vide | 0 | 0 |
 
 Idempotence : deux exécutions successives du seed ne produisent aucune violation d'unicité et
-laissent exactement le même état (les lignes `@demo.bankati.test` sont supprimées puis réinsérées).
+laissent exactement le même état (les lignes `@demo.orabank.test` sont supprimées puis réinsérées).
 
 ## 3. Scénario jouable par compte
 
