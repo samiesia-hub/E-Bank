@@ -16,6 +16,9 @@ public interface VirementRepository extends JpaRepository<Virement, Long> {
 
     Optional<Virement> findByReference(String reference);
 
+    /** Derniers virements du client connecte, tous sens confondus (tableau de bord). */
+    Page<Virement> findByCompteClientEmailOrderByDateTransactionDesc(String emailClient, Pageable pageable);
+
     @Query("""
     SELECT v FROM Virement v
     WHERE v.compte.client.email = :emailClient
