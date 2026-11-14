@@ -30,7 +30,7 @@ export default function ClientLayoutShell({
         <div className="bg-navy px-space-lg py-space-md">
           <Image
             src="/logo-ora-bank-clair.png"
-            alt="Ora Bank"
+            alt="Orabank"
             width={525}
             height={317}
             priority

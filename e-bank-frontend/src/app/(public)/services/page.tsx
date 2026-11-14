@@ -101,9 +101,9 @@ const parcours = [
 ];
 
 export const metadata = {
-  title: "Services — Ora Bank",
+  title: "Services — Orabank",
   description:
-    "Comptes, virements SEPA, carte, historique et support : les services bancaires Ora Bank en ligne.",
+    "Comptes, virements SEPA, carte, historique et support : les services bancaires Orabank en ligne.",
 };
 
 export default function PageServices() {

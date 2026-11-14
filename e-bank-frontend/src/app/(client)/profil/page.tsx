@@ -38,7 +38,7 @@ export default function PageProfil() {
   return (
     <main className="mx-auto max-w-[800px] px-margin py-space-xl">
       <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-        Ora Bank — Mon profil
+        Orabank — Mon profil
       </p>
       <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">
         Mon profil
@@ -80,7 +80,7 @@ export default function PageProfil() {
                   {profil.nom}
                 </p>
                 <p className="mt-space-xs font-body-sm text-body-sm text-neutral-core">
-                  Client Ora Bank
+                  Client Orabank
                 </p>
               </div>
             </div>

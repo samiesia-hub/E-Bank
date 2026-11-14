@@ -15,7 +15,7 @@ export default function MiseEnPageAuth({
         <div className="flex items-center gap-space-sm">
           <Image
             src="/logo-ora-bank-clair.png"
-            alt="Ora Bank"
+            alt="Orabank"
             width={525}
             height={317}
             priority
@@ -48,7 +48,7 @@ export default function MiseEnPageAuth({
 
         <div className="pt-space-md">
           <p className="font-label-sm text-label-sm text-surface-dim/70">
-            © 2026 Ora Bank S.A. Établissement de crédit agréé et régulé.
+            © 2026 Orabank S.A. Établissement de crédit agréé et régulé.
           </p>
         </div>
       </aside>
@@ -58,7 +58,7 @@ export default function MiseEnPageAuth({
           <div className="mb-space-lg flex justify-center lg:hidden">
             <Image
               src="/logo-ora-bank.png"
-              alt="Ora Bank"
+              alt="Orabank"
               width={525}
               height={317}
               priority

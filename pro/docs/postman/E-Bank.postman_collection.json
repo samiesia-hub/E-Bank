@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "E-Bank API",
+    "name": "Orabank API",
     "description": "Parcours complet de l'API E-Bank avec les trois roles.\n\n1. Ouvrir l'environnement « E-Bank - local » (baseUrl = http://localhost:8090).\n2. Executer le dossier « 1. Authentification » : les jetons admin/client/support sont enregistres dans les variables.\n3. Executer les autres dossiers dans l'ordre.\n\nLes comptes de demonstration proviennent du seed (pro/src/main/resources/db/demo/seed-demo.sql).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

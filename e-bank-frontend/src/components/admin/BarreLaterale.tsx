@@ -110,7 +110,7 @@ export function BarreLaterale() {
                             </div>
                             <div className="flex min-w-0 flex-col">
                 <span className="text-label-md font-semibold text-white">
-                  Admin Ora Bank
+                  Admin Orabank
                 </span>
                                 <span className="text-label-sm text-white/60">
                   Administrateur

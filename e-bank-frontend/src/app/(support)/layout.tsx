@@ -13,7 +13,7 @@ export default function MiseEnPageSupport({
         <div className="flex items-center gap-3 bg-navy px-space-lg py-space-md">
           <Image
             src="/logo-ora-bank-clair.png"
-            alt="Ora Bank"
+            alt="Orabank"
             width={525}
             height={317}
             priority
@@ -31,7 +31,7 @@ export default function MiseEnPageSupport({
         <header className="flex h-14 items-center gap-3 border-b border-divider bg-surface-container-lowest px-space-lg">
           <Image
             src="/logo-ora-bank.png"
-            alt="Ora Bank"
+            alt="Orabank"
             width={525}
             height={317}
             priority

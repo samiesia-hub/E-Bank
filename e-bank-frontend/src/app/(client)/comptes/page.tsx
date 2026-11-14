@@ -25,7 +25,7 @@ export default function PageMesComptes() {
   return (
     <main className="mx-auto max-w-[1200px] px-margin py-space-xl">
       <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-        Ora Bank — Mes comptes
+        Orabank — Mes comptes
       </p>
       <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">
         Mes comptes

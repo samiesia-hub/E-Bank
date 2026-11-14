@@ -1,5 +1,5 @@
 -- =====================================================================
--- E-Bank - reinitialisation complete de la base de developpement
+-- Orabank - reinitialisation complete de la base de developpement
 --
 -- Efface TOUTES les donnees (pas seulement celles de demonstration),
 -- remet les sequences a zero puis recharge le jeu de demonstration.

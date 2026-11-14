@@ -1,4 +1,4 @@
-// Types du domaine Ora Bank — miroir du diagramme de classes
+// Types du domaine Orabank — miroir du diagramme de classes
 // Montant.montant reste une string (jamais de float). Affichage via Intl.NumberFormat.
 export type Role = "CLIENT" | "AGENT_SUPPORT" | "ADMIN";
 

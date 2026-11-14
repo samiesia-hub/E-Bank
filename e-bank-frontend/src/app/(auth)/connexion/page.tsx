@@ -10,7 +10,7 @@ import { BASE_API } from "@/lib/client-api";
 import { routeSelonRole } from "@/features/authentification/route-apres-connexion";
 
 // Mode démonstration : ce compte fonctionne même sans backend.
-const COMPTE_DEMO = { email: "demo@orabank.ma", motDePasse: "OraBank2026!" };
+const COMPTE_DEMO = { email: "demo@orabank.ma", motDePasse: "Orabank2026!" };
 const CLE_COMPTES = "ora-bank.comptes-demo";
 
 function trouverCompteDemo(email: string, motDePasse: string) {
@@ -91,7 +91,7 @@ export default function PageConnexion() {
             Connexion à votre espace
           </h1>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
-            Accédez à vos comptes Ora Bank
+            Accédez à vos comptes Orabank
           </p>
         </div>
 

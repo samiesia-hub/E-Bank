@@ -11,10 +11,10 @@ export default function MiseEnPagePublique({
     <div className="flex min-h-screen flex-col bg-background">
       <header className="bg-navy text-white">
         <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-margin">
-          <Link href="/" className="shrink-0" aria-label="Ora Bank, accueil">
+          <Link href="/" className="shrink-0" aria-label="Orabank, accueil">
             <Image
               src="/logo-ora-bank-clair.png"
-              alt="Ora Bank"
+              alt="Orabank"
               width={525}
               height={317}
               priority

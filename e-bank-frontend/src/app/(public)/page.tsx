@@ -98,7 +98,7 @@ const temoignages = [
 
 const faq = [
   {
-    question: "Comment ouvrir un compte Ora Bank ?",
+    question: "Comment ouvrir un compte Orabank ?",
     reponse:
       "Cliquez sur « Ouvrir un compte », complétez le formulaire d'inscription, puis vérifiez le code OTP envoyé sur votre téléphone. Une vérification de votre identité (KYC) est ensuite réalisée avant l'activation du compte.",
   },
@@ -126,11 +126,11 @@ export default function Home() {
   return (
     <main>
       {/* 0. VIDÉO DE PRÉSENTATION — bandeau plein écran, lecture automatique en boucle */}
-      <section aria-label="Vidéo de présentation Ora Bank" className="w-full overflow-hidden bg-navy">
-        <h2 className="sr-only">Vidéo de présentation d&apos;Ora Bank</h2>
+      <section aria-label="Vidéo de présentation Orabank" className="w-full overflow-hidden bg-navy">
+        <h2 className="sr-only">Vidéo de présentation d&apos;Orabank</h2>
         <VideoPresentation
           src="/videos/presentation-ora-bank.mp4"
-          label="Vidéo de présentation d'Ora Bank"
+          label="Vidéo de présentation d'Orabank"
           className="block aspect-[8/5] w-full object-cover"
         />
       </section>
@@ -140,7 +140,7 @@ export default function Home() {
         <div className={`${conteneur} grid items-center gap-space-xl py-space-2xl lg:grid-cols-2`}>
           <div>
             <p className="font-label-sm text-label-sm uppercase tracking-wider text-neutral-core">
-              Ora Bank — Banque en ligne
+              Orabank — Banque en ligne
             </p>
             <h1 className="mt-space-md max-w-xl text-balance font-display-hero text-display-hero-mobile text-navy lg:text-display-hero">
               Votre compte, votre IBAN et vos virements SEPA — 100 % en ligne.
@@ -198,12 +198,12 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* 3. POURQUOI ORA BANK — arguments + photo des paiements */}
-      <section aria-label="Pourquoi Ora Bank" className="border-b border-divider">
+      {/* 3. POURQUOI ORABANK — arguments + photo des paiements */}
+      <section aria-label="Pourquoi Orabank" className="border-b border-divider">
         <div className={`${conteneur} grid items-center gap-space-xl py-space-xl lg:grid-cols-[1.2fr_1fr]`}>
           <div>
             <h2 className="text-headline-section-mobile font-light text-navy lg:text-headline-section">
-              Pourquoi Ora Bank
+              Pourquoi Orabank
             </h2>
             <div className="mt-space-xl grid gap-gutter sm:grid-cols-2">
               {argumentsPoursuivre.map((a) => (
@@ -400,7 +400,7 @@ export default function Home() {
       <section aria-label="Ouvrir un compte" className="bg-navy text-white">
         <div className={`${conteneur} flex flex-col items-center gap-space-lg py-space-2xl text-center`}>
           <h2 className="max-w-2xl text-balance text-headline-section-mobile font-light text-white lg:text-headline-section">
-            Prêt à rejoindre Ora Bank ? L&apos;ouverture de votre compte commence ici.
+            Prêt à rejoindre Orabank ? L&apos;ouverture de votre compte commence ici.
           </h2>
           <div className="flex flex-col justify-center gap-space-md sm:flex-row">
             <Link

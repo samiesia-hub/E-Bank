@@ -1,4 +1,4 @@
-# E-Banking Application
+# Orabank — API
 
 Application web de gestion bancaire développée avec Spring Boot et REACT. Le projet permet de mettre en pratique le développement full-stack, la gestion d'une base de données relationnelle et le déploiement avec Docker.
 

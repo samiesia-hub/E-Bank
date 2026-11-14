@@ -101,9 +101,9 @@ const rubriques: Rubrique[] = [
 ];
 
 export const metadata = {
-  title: "Aide et questions fréquentes — Ora Bank",
+  title: "Aide et questions fréquentes — Orabank",
   description:
-    "Réponses sur l'ouverture de compte, la connexion, les virements et le support Ora Bank.",
+    "Réponses sur l'ouverture de compte, la connexion, les virements et le support Orabank.",
 };
 
 export default function PageFaq() {

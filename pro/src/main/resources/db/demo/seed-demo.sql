@@ -1,5 +1,5 @@
 -- =====================================================================
--- E-Bank - jeu de donnees de demonstration (PostgreSQL)
+-- Orabank - jeu de donnees de demonstration (PostgreSQL)
 --
 -- Objectif : rendre la demo jouable sans aucune creation manuelle.
 --   * 2 administrateurs, 2 agents support, 5 clients

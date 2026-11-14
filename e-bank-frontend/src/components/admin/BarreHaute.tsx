@@ -5,11 +5,11 @@ import { RechercheGlobale } from "@/components/admin/RechercheGlobale";
 export function BarreHaute() {
     return (
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-navy text-white">
-            {/* Logo Ora Bank */}
+            {/* Logo Orabank */}
             <div className="flex shrink-0 items-center px-space-lg">
                 <Image
                     src="/logo-ora-bank-clair.png"
-                    alt="Ora Bank"
+                    alt="Orabank"
                     width={525}
                     height={317}
                     priority

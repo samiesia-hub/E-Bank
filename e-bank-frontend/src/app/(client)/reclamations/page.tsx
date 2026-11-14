@@ -46,7 +46,7 @@ export default function PageReclamations() {
       <div className="flex flex-wrap items-end justify-between gap-space-md">
         <div>
           <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-            Ora Bank — Réclamations
+            Orabank — Réclamations
           </p>
           <h1 className="mt-space-sm font-headline-md text-headline-md text-navy">
             Mes réclamations

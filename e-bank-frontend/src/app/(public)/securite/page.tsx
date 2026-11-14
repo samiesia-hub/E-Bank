@@ -62,9 +62,9 @@ const bonnesPratiques = [
 ];
 
 export const metadata = {
-  title: "Centre sécurité — Ora Bank",
+  title: "Centre sécurité — Orabank",
   description:
-    "Authentification forte, chiffrement, vérification d'identité et journal d'audit : comment Ora Bank protège vos comptes.",
+    "Authentification forte, chiffrement, vérification d'identité et journal d'audit : comment Orabank protège vos comptes.",
 };
 
 export default function PageSecurite() {

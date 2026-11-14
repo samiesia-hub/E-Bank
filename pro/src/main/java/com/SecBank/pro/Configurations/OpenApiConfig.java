@@ -28,7 +28,7 @@ public class OpenApiConfig {
     public OpenAPI eBankOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("E-Bank API")
+                        .title("Orabank API")
                         .version("1.0.0")
                         .description("""
                                 API de la banque de demonstration.
