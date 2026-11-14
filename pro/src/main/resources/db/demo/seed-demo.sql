@@ -10,7 +10,9 @@
 --
 -- Idempotent : les lignes de demonstration sont identifiees par le domaine
 -- d'e-mail reserve @demo.bankati.test (RFC 2606) et supprimees avant
--- reinsertion. Deux executions successives donnent donc le meme etat.
+-- reinsertion. L'ancien domaine @demo.bankati.test est purge lui aussi pour
+-- que les bases deja initialisees restent rejouables. Deux executions
+-- successives donnent donc le meme etat.
 --
 -- Securite : donnees strictement synthetiques. Les mots de passe sont des
 -- hashes BCrypt de mots de passe de test documentes dans pro/README.md et
@@ -105,22 +107,22 @@ DELETE FROM compte_bancaire
 -- Detache les lignes reelles eventuellement assignees a un agent de demo
 -- avant de supprimer ces agents (sinon la suppression serait bloquee).
 UPDATE reclamation SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 UPDATE ticket_support SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 UPDATE operation_guichet SET agent_id = NULL
- WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE agent_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 UPDATE dossierkyc SET admin_id = NULL
- WHERE admin_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE admin_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 
 DELETE FROM client
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 
 DELETE FROM agent_support
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 
 DELETE FROM administrateur
- WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test');
+ WHERE user_id IN (SELECT id_utilisateur FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 
 -- Les entrees d'audit (export CSV, operations au guichet, ...) referencent les
 -- utilisateurs de demo : elles partent avant eux (la cle etrangere n'a pas de
@@ -128,9 +130,9 @@ DELETE FROM administrateur
 DELETE FROM journal_audit
  WHERE utilisateur_id IN (SELECT id_utilisateur
                             FROM utilisateur
-                           WHERE email LIKE '%@demo.bankati.test');
+                           WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test');
 
-DELETE FROM utilisateur WHERE email LIKE '%@demo.bankati.test';
+DELETE FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test';
 
 -- ---------------------------------------------------------------------
 -- 2. Utilisateurs

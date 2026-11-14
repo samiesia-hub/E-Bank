@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -26,8 +27,15 @@ export default function ClientLayoutShell({
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 border-r border-divider bg-surface-container-lowest md:block">
-        <div className="bg-navy px-space-lg py-space-md font-headline-sm text-headline-sm font-semibold text-white">
-          Ora Bank
+        <div className="bg-navy px-space-lg py-space-md">
+          <Image
+            src="/logo-ora-bank-clair.png"
+            alt="Ora Bank"
+            width={525}
+            height={317}
+            priority
+            className="h-9 w-auto"
+          />
         </div>
         <nav className="flex flex-col gap-1 p-space-md">
           {links.map((link) => (

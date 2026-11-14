@@ -1,6 +1,6 @@
-# Bankati — Frontend E-Bank (Next.js)
+# Ora Bank — Frontend E-Bank (Next.js)
 
-Frontend de la banque en ligne **Bankati** : vitrine publique + espaces client / support / admin.
+Frontend de la banque en ligne **Ora Bank** : vitrine publique + espaces client / support / admin.
 Stack : **Next.js 16 (App Router) + TypeScript + Tailwind v4 + TanStack Query + Zustand + React Hook Form + Zod**.
 
 > Routes et fichiers en **français** (`/connexion`, `/tableau-de-bord`, `/virements/nouveau`, ...).

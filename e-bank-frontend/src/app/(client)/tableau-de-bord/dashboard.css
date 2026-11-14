@@ -2,19 +2,19 @@
 /* La navigation et la barre supérieure sont fournies par le layout client.
    Le composant historique du tableau de bord les contient encore : on masque
    uniquement ces doublons pour conserver une seule navigation visible. */
-.bankati-app > .topbar,
-.bankati-app > .sidebar,
-.bankati-app > .sidebar-overlay {
+.ora-bank-app > .topbar,
+.ora-bank-app > .sidebar,
+.ora-bank-app > .sidebar-overlay {
   display: none !important;
 }
 
-.bankati-app {
+.ora-bank-app {
   min-height: 0;
   background: #f4f6fa;
   color: #17223b;
 }
 
-.bankati-app > .main-content {
+.ora-bank-app > .main-content {
   width: 100%;
   min-height: auto;
   margin: 0;
@@ -680,7 +680,7 @@
 }
 
 @media (max-width: 760px) {
-  .bankati-app > .main-content { padding: 22px 16px; }
+  .ora-bank-app > .main-content { padding: 22px 16px; }
   .page-header { align-items: flex-start; flex-direction: column; margin-bottom: 25px; }
   .login-info { align-items: flex-start; text-align: left; }
   .accounts-grid, .right-column, .bottom-grid { grid-template-columns: 1fr; }

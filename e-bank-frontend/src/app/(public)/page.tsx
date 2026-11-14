@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { VideoPresentation } from "@/components/interface/VideoPresentation";
 import {
   Landmark,
   ShieldCheck,
@@ -124,6 +125,16 @@ const conteneur = "mx-auto w-full max-w-[1200px] px-margin";
 export default function Home() {
   return (
     <main>
+      {/* 0. VIDÉO DE PRÉSENTATION — bandeau plein écran, lecture automatique en boucle */}
+      <section aria-label="Vidéo de présentation Ora Bank" className="w-full overflow-hidden bg-navy">
+        <h2 className="sr-only">Vidéo de présentation d&apos;Ora Bank</h2>
+        <VideoPresentation
+          src="/videos/presentation-ora-bank.mp4"
+          label="Vidéo de présentation d'Ora Bank"
+          className="block aspect-[8/5] w-full object-cover"
+        />
+      </section>
+
       {/* 1. HERO — promesse concrète + photo réelle à droite */}
       <section aria-label="Présentation" className="border-b border-divider bg-surface-tint">
         <div className={`${conteneur} grid items-center gap-space-xl py-space-2xl lg:grid-cols-2`}>

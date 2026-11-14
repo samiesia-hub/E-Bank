@@ -20,7 +20,7 @@ SELECT controle, attendu, obtenu,
        CASE WHEN attendu IS NOT DISTINCT FROM obtenu THEN 'OK' ELSE 'ECHEC' END AS verdict
 FROM (
     SELECT 'utilisateurs de demo' AS controle, 9::bigint AS attendu,
-           (SELECT count(*) FROM utilisateur WHERE email LIKE '%@demo.bankati.test') AS obtenu
+           (SELECT count(*) FROM utilisateur WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test') AS obtenu
     UNION ALL
     SELECT 'comptes de demo', 8,
            (SELECT count(*) FROM compte_bancaire WHERE id BETWEEN 2001 AND 2008)
@@ -91,7 +91,7 @@ FROM (
     SELECT 'e-mails de demo en doublon', 0,
            (SELECT count(*) FROM (
                 SELECT email FROM utilisateur
-                 WHERE email LIKE '%@demo.bankati.test'
+                 WHERE email LIKE '%@demo.bankati.test' OR email LIKE '%@demo.bankati.test'
                  GROUP BY email HAVING count(*) > 1) d)
     UNION ALL
     -- RIB synthetiques valides : (numero * 100 + cle) doit etre multiple de 97.

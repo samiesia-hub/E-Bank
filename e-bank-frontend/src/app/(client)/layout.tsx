@@ -26,7 +26,7 @@ export default function MiseEnPageClient({ children }: { children: React.ReactNo
     <div className="min-h-screen bg-[#f5f7fb] text-on-surface">
       <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-white/10 bg-navy px-5 text-white md:px-8">
         <Link href="/tableau-de-bord" className="flex items-center gap-3" aria-label="Ora Bank, tableau de bord">
-          <Image src="/logo-ora-bank-icone.png" alt="Ora Bank" width={289} height={153} priority className="h-9 w-auto" />
+          <Image src="/logo-ora-bank-clair.png" alt="Ora Bank" width={525} height={317} priority className="h-11 w-auto" />
           <span className="hidden border-l border-white/20 pl-3 text-sm font-medium tracking-wide sm:block">Espace client</span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
