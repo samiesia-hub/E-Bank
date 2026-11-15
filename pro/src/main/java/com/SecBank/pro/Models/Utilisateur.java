@@ -7,6 +7,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.List;
 @Entity
 @Data
@@ -30,6 +33,10 @@ public class Utilisateur {
     private boolean doubleauthActive;
     @Enumerated(value = EnumType.STRING)
     private Role role;
+    // Date de creation du compte, renseignee par Hibernate a l'insertion (SCRUM-97).
+    @CreationTimestamp
+    @Column(name = "date_creation", updatable = false)
+    private LocalDateTime dateCreation;
     // Boucle JSON possible avec JournalAudit.utilisateur ; non utile dans nos reponses.
     @JsonIgnore
     @OneToMany(mappedBy = "utilisateur")

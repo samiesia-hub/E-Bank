@@ -20,6 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.SecBank.pro.Exceptions.DonneeInvalideException;
 import com.SecBank.pro.Services.ReinitialisationMotDePasseService;
+import com.SecBank.pro.Services.RefreshTokenService;
+import static org.mockito.ArgumentMatchers.any;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -38,6 +41,14 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
+
+    @BeforeEach
+    void preparerLesRefreshTokens() {
+        given(refreshTokenService.createRefreshToken(any())).willReturn("refresh-token-de-test");
+    }
 
     @Test
     void inscriptionRetourneUnToken() throws Exception {
