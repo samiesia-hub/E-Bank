@@ -10,7 +10,13 @@ import {
   obtenirMesReclamations,
   obtenirReclamation,
   creerReclamation,
+  obtenirMesBeneficiaires,
+  creerBeneficiaire,
+  supprimerBeneficiaire,
+  effectuerVirement,
   type CreerReclamationPayload,
+  type CreerBeneficiairePayload,
+  type EffectuerVirementPayload,
 } from "@/services/api";
 
 /** Tableau de bord complet (comptes + virements + réclamations). */
@@ -86,6 +92,49 @@ export function useCreerReclamation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client", "reclamations"] });
       queryClient.invalidateQueries({ queryKey: ["client", "dashboard"] });
+    },
+  });
+}
+
+/** Liste des bénéficiaires du client connecté. */
+export function useBeneficiaires() {
+  return useQuery({
+    queryKey: ["client", "beneficiaires"],
+    queryFn: obtenirMesBeneficiaires,
+  });
+}
+
+/** Mutation : ajouter un bénéficiaire, invalide le cache liste. */
+export function useCreerBeneficiaire() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreerBeneficiairePayload) => creerBeneficiaire(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client", "beneficiaires"] });
+    },
+  });
+}
+
+/** Mutation : effectuer un virement, invalide soldes et opérations. */
+export function useEffectuerVirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: EffectuerVirementPayload) => effectuerVirement(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client", "comptes"] });
+      queryClient.invalidateQueries({ queryKey: ["client", "dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["client", "transactions"] });
+    },
+  });
+}
+
+/** Mutation : supprimer un bénéficiaire, invalide le cache liste. */
+export function useSupprimerBeneficiaire() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => supprimerBeneficiaire(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client", "beneficiaires"] });
     },
   });
 }

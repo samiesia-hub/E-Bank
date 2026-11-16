@@ -18,6 +18,18 @@ public interface VirementService {
             String motif
     );
 
+    /**
+     * Virement vers un compte designe directement par son RIB, son numero de
+     * compte ou son IBAN, sans beneficiaire enregistre.
+     */
+    Virement effectuerVirementVersCompte(
+            String emailClient,
+            Long compteSourceId,
+            String numeroCompteBeneficiaire,
+            BigDecimal montant,
+            String motif
+    );
+
     Virement consulterRecu(String emailClient, String reference);
 
     Page<Virement> consulterHistorique(

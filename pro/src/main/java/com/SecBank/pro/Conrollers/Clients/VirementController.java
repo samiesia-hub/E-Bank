@@ -44,22 +44,39 @@ public class VirementController {
     ) {
         verifierRoleClient(authentication);
 
-        if (requete == null
-                || requete.compteSourceId() == null
-                || requete.beneficiaireId() == null) {
+        if (requete == null || requete.compteSourceId() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Le compte source et le bénéficiaire sont obligatoires"
+                    "Le compte source est obligatoire"
             );
         }
 
-        Virement virement = virementService.effectuerVirement(
-                authentication.getName(),
-                requete.compteSourceId(),
-                requete.beneficiaireId(),
-                requete.montant(),
-                requete.motif()
-        );
+        boolean versBeneficiaire = requete.beneficiaireId() != null;
+        boolean versCompte = requete.numeroCompteBeneficiaire() != null
+                && !requete.numeroCompteBeneficiaire().isBlank();
+
+        if (!versBeneficiaire && !versCompte) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le beneficiaire (RIB, numero de compte ou IBAN) est obligatoire"
+            );
+        }
+
+        Virement virement = versBeneficiaire
+                ? virementService.effectuerVirement(
+                        authentication.getName(),
+                        requete.compteSourceId(),
+                        requete.beneficiaireId(),
+                        requete.montant(),
+                        requete.motif()
+                )
+                : virementService.effectuerVirementVersCompte(
+                        authentication.getName(),
+                        requete.compteSourceId(),
+                        requete.numeroCompteBeneficiaire(),
+                        requete.montant(),
+                        requete.motif()
+                );
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(VirementResponse.depuis(virement));

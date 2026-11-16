@@ -1,52 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
 import { Send, CheckCircle, AlertCircle } from "lucide-react";
 import { Carte } from "@/components/interface/Carte";
 import { BanniereErreur } from "@/components/interface/BanniereErreur";
 import { SqueletteCarteCompte } from "@/components/interface/Squelettes";
-import { useComptes } from "@/features/client/hooks";
-import { appelApi } from "@/lib/client-api";
+import { useComptes, useEffectuerVirement } from "@/features/client/hooks";
 import { messageErreurApi } from "@/lib/client-api";
-
-// Payload POST /api/client/virements (endpoint à venir — implémenté ici en avance)
-interface VirementPayload {
-  compteDebiteurId: number;
-  ribBeneficiaire: string;
-  montant: number;
-  motif: string;
-}
+import type { VirementEffectue } from "@/services/api";
 
 type Etape = "formulaire" | "succes";
 
+const CHAMP =
+  "mt-space-sm w-full rounded-lg border border-divider bg-surface-container-lowest px-space-md py-2 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
+
 export default function PageNouveauVirement() {
   const { data: comptes, isLoading, isError, error } = useComptes();
+  const virement = useEffectuerVirement();
 
   const [etape, setEtape] = useState<Etape>("formulaire");
+  const [recu, setRecu] = useState<VirementEffectue | null>(null);
+
   const [compteId, setCompteId] = useState("");
-  const [rib, setRib] = useState("");
+  const [numeroBeneficiaire, setNumeroBeneficiaire] = useState("");
   const [montant, setMontant] = useState("");
   const [motif, setMotif] = useState("");
 
-  const { mutate, isPending, error: erreurMutation } = useMutation({
-    mutationFn: (payload: VirementPayload) =>
-      appelApi<unknown>("/client/virements", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: () => setEtape("succes"),
-  });
-
   function soumettre(e: React.FormEvent) {
     e.preventDefault();
-    if (!compteId || !rib || !montant) return;
-    mutate({
-      compteDebiteurId: Number(compteId),
-      ribBeneficiaire: rib.replace(/\s/g, ""),
-      montant: Number(montant),
-      motif,
-    });
+    if (!compteId || !numeroBeneficiaire || !montant) return;
+    virement.mutate(
+      {
+        compteSourceId: Number(compteId),
+        numeroCompteBeneficiaire: numeroBeneficiaire,
+        montant: Number(montant),
+        motif: motif.trim(),
+      },
+      {
+        onSuccess: (resultat) => {
+          setRecu(resultat);
+          setEtape("succes");
+        },
+      }
+    );
+  }
+
+  function reinitialiser() {
+    setEtape("formulaire");
+    setRecu(null);
+    setCompteId("");
+    setNumeroBeneficiaire("");
+    setMontant("");
+    setMotif("");
   }
 
   if (etape === "succes") {
@@ -58,21 +64,36 @@ export default function PageNouveauVirement() {
             Virement envoyé
           </h1>
           <p className="mt-space-sm font-body-md text-body-md text-neutral-core">
-            Votre virement est en cours de traitement.
+            {recu
+              ? `${new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "MAD",
+                }).format(recu.montant)} envoyés à ${recu.beneficiaire}.`
+              : "Votre virement est en cours de traitement."}
           </p>
+          {recu && (
+            <p className="mt-space-sm font-body-sm text-body-sm text-neutral-core">
+              Référence {recu.reference} · statut {recu.statut}
+            </p>
+          )}
           <button
-            onClick={() => {
-              setEtape("formulaire");
-              setRib(""); setMontant(""); setMotif(""); setCompteId("");
-            }}
+            onClick={reinitialiser}
             className="mt-space-lg rounded-lg bg-primary-container px-space-lg py-2 font-label-md text-label-md text-white hover:bg-primary"
           >
             Nouveau virement
           </button>
+          <Link
+            href="/comptes"
+            className="mt-space-sm font-label-md text-label-md text-primary hover:underline"
+          >
+            Voir mes comptes
+          </Link>
         </Carte>
       </main>
     );
   }
+
+  const formulaireIncomplet = !compteId || !numeroBeneficiaire || !montant;
 
   return (
     <main className="mx-auto max-w-[700px] px-margin py-space-xl">
@@ -83,7 +104,6 @@ export default function PageNouveauVirement() {
         Effectuer un virement
       </h1>
 
-      {/* Erreur chargement comptes */}
       {isError && (
         <div className="mt-space-lg">
           <BanniereErreur erreur={error} />
@@ -110,7 +130,7 @@ export default function PageNouveauVirement() {
                 value={compteId}
                 onChange={(e) => setCompteId(e.target.value)}
                 required
-                className="mt-space-sm w-full rounded-lg border border-divider bg-surface-container-lowest px-space-md py-2 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                className={CHAMP}
               >
                 <option value="">— Choisir un compte —</option>
                 {(comptes ?? [])
@@ -127,25 +147,34 @@ export default function PageNouveauVirement() {
             )}
           </div>
 
-          {/* RIB bénéficiaire */}
+          {/* Compte bénéficiaire */}
           <div>
             <label
-              htmlFor="rib"
+              htmlFor="beneficiaire"
               className="block font-label-md text-label-md font-semibold text-on-surface"
             >
-              RIB bénéficiaire
+              RIB ou numéro de compte du bénéficiaire
             </label>
             <input
-              id="rib"
+              id="beneficiaire"
               type="text"
               inputMode="numeric"
               maxLength={28}
-              placeholder="24 chiffres"
-              value={rib}
-              onChange={(e) => setRib(e.target.value.replace(/\D/g, ""))}
+              placeholder="24 chiffres (RIB), 13 chiffres (compte) ou IBAN"
+              value={numeroBeneficiaire}
+              onChange={(e) =>
+                setNumeroBeneficiaire(
+                  e.target.value.replace(/[^0-9A-Za-z]/g, "").toUpperCase()
+                )
+              }
               required
-              className="mt-space-sm w-full rounded-lg border border-divider bg-surface-container-lowest px-space-md py-2 font-body-md text-body-md text-on-surface tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`${CHAMP} tracking-widest`}
             />
+            <p className="mt-space-sm font-body-sm text-body-sm text-neutral-core">
+              {numeroBeneficiaire.length === 0
+                ? "Le compte doit exister chez Orabank."
+                : `${numeroBeneficiaire.length} caractères saisis.`}
+            </p>
           </div>
 
           {/* Montant */}
@@ -165,7 +194,7 @@ export default function PageNouveauVirement() {
               value={montant}
               onChange={(e) => setMontant(e.target.value)}
               required
-              className="mt-space-sm w-full rounded-lg border border-divider bg-surface-container-lowest px-space-md py-2 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className={CHAMP}
             />
           </div>
 
@@ -184,26 +213,26 @@ export default function PageNouveauVirement() {
               placeholder="ex. Loyer octobre"
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
-              className="mt-space-sm w-full rounded-lg border border-divider bg-surface-container-lowest px-space-md py-2 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className={CHAMP}
             />
           </div>
 
           {/* Erreur soumission */}
-          {erreurMutation && (
+          {virement.error && (
             <div className="flex items-start gap-space-sm rounded-lg border border-[#f5c6c6] bg-[#fff5f5] p-space-md">
               <AlertCircle className="mt-0.5 shrink-0 text-[#c0392b]" size={18} />
               <p className="font-body-sm text-body-sm text-[#c0392b]">
-                {messageErreurApi(erreurMutation)}
+                {messageErreurApi(virement.error)}
               </p>
             </div>
           )}
 
           <button
             type="submit"
-            disabled={isPending || isLoading || !compteId || !rib || !montant}
+            disabled={virement.isPending || isLoading || formulaireIncomplet}
             className="inline-flex w-full items-center justify-center gap-space-sm rounded-lg bg-primary-container px-space-lg py-3 font-label-md text-label-md text-white hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isPending ? (
+            {virement.isPending ? (
               <span className="animate-pulse">Envoi en cours…</span>
             ) : (
               <>

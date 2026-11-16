@@ -154,3 +154,70 @@ export function creerReclamation(
   });
 }
 
+// ─── Bénéficiaires ────────────────────────────────────────────────────────────
+
+/** Réponse de GET/POST /api/client/beneficiaires (BeneficiaireResponse.java) */
+export interface BeneficiaireClient {
+  id: number;
+  nom: string;
+  prenom: string;
+  numeroCompte: string;
+}
+
+export interface CreerBeneficiairePayload {
+  nom: string;
+  prenom: string;
+  numeroCompte: string;
+}
+
+/** Liste des bénéficiaires du client connecté. */
+export function obtenirMesBeneficiaires(): Promise<BeneficiaireClient[]> {
+  return appelApi<BeneficiaireClient[]>("/client/beneficiaires");
+}
+
+/** Ajouter un bénéficiaire. */
+export function creerBeneficiaire(
+  payload: CreerBeneficiairePayload
+): Promise<BeneficiaireClient> {
+  return appelApi<BeneficiaireClient>("/client/beneficiaires", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Supprimer un bénéficiaire. */
+export function supprimerBeneficiaire(id: number): Promise<void> {
+  return appelApi<void>(`/client/beneficiaires/${id}`, { method: "DELETE" });
+}
+
+// ─── Virements ────────────────────────────────────────────────────────────────
+
+/** Réponse de POST /api/virements (VirementResponse.java) */
+export interface VirementEffectue {
+  transactionId: number;
+  reference: string;
+  compteSourceId: number;
+  montant: number;
+  beneficiaire: string;
+  motif: string;
+  statut: string;
+  dateTransaction: string;
+}
+
+export interface EffectuerVirementPayload {
+  compteSourceId: number;
+  numeroCompteBeneficiaire: string;
+  montant: number;
+  motif: string;
+}
+
+/** Effectuer un virement vers un bénéficiaire enregistré. */
+export function effectuerVirement(
+  payload: EffectuerVirementPayload
+): Promise<VirementEffectue> {
+  return appelApi<VirementEffectue>("/virements", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
