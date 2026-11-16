@@ -269,6 +269,25 @@ INSERT INTO ticket_support (id, date_fermetur, date_ouverture, priorite, status,
     (5005, NULL,                        TIMESTAMP '2026-10-18 16:15:00', 'MOYENNE',  'EN_ATTENTE_CLIENT', 1003, 4005);
 
 -- ---------------------------------------------------------------------
+-- 5bis. Dossiers KYC (file d'attente du support : 2 en attente, 1 valide)
+-- ---------------------------------------------------------------------
+INSERT INTO dossierkyc (id, date_soumission, statutkyc, admin_id, client_id) VALUES
+    (6001, CURRENT_TIMESTAMP - INTERVAL '3 days', 'EN_ATTENTE', NULL, 1005),
+    (6002, CURRENT_TIMESTAMP - INTERVAL '1 day',  'EN_ATTENTE', NULL, 1006),
+    (6003, CURRENT_TIMESTAMP - INTERVAL '9 days', 'VALIDE',     1001, 1007);
+
+-- ---------------------------------------------------------------------
+-- 5ter. Journal d'audit (alimente la carte "Activites recentes" de l'admin)
+-- ---------------------------------------------------------------------
+INSERT INTO journal_audit (id, action, date_action, details, utilisateur_id) VALUES
+    (9001, 'OUVERTURE_COMPTE',     CURRENT_TIMESTAMP - INTERVAL '3 days',  'Compte courant 1000000000004 ouvert pour Client Demo 4', 1001),
+    (9002, 'DEPOT_GUICHET',        CURRENT_TIMESTAMP - INTERVAL '2 days',  'Depot de 2500 MAD sur le compte 1000000000001',          1002),
+    (9003, 'REPONSE_TICKET',       CURRENT_TIMESTAMP - INTERVAL '1 day',   'Reponse apportee au ticket 5001',                        1003),
+    (9004, 'VALIDATION_KYC',       CURRENT_TIMESTAMP - INTERVAL '6 hours', 'Dossier KYC 6003 valide',                                1001),
+    (9005, 'EXPORT_TRANSACTIONS',  CURRENT_TIMESTAMP - INTERVAL '4 hours', 'Export CSV des transactions sur 30 jours',               1002),
+    (9006, 'CONNEXION_ADMIN',      CURRENT_TIMESTAMP - INTERVAL '30 minutes', 'Connexion a la console d administration',              1001);
+
+-- ---------------------------------------------------------------------
 -- 6. Sequences : les prochains identifiants generes par Hibernate restent
 --    au-dessus des identifiants de demonstration (1001 / 2001 / 3001 ...).
 -- ---------------------------------------------------------------------

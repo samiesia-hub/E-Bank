@@ -9,4 +9,7 @@ import java.util.List;
 public interface DossierKYCRepository extends JpaRepository<DossierKYC, Long> {
 
     List<DossierKYC> findByStatutKYCOrderByDateSoumissionAsc(StatutKYC statut);
+
+    /** Nombre de dossiers dans un statut donne (usage : file d'attente KYC). */
+    long countByStatutKYC(StatutKYC statut);
 }
