@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: ebank-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-ebank}
@@ -16,6 +15,58 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - orabank
+
+  backend:
+    build:
+      context: ./pro
+      dockerfile: ../docker/backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-ebank}
+      DB_USER: ${POSTGRES_USER:-ebank}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-ebank}
+      JWT_SECRET: ${JWT_SECRET:-ebank-local-dev-secret-change-me-32}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/v3/api-docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+    networks:
+      - orabank
+
+  frontend:
+    build:
+      context: ./e-bank-frontend
+      dockerfile: ../docker/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-ebank-local-dev-secret-change-me-32}
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      - orabank
 
   # --- Qualite du code (Membre 2 - Mohamed) -------------------------------
   # Base dediee a SonarQube : ne pas melanger avec la base applicative "db".
@@ -81,3 +132,6 @@ volumes:
   ebank-sonar-data:
   ebank-sonar-logs:
   ebank-sonar-extensions:
+
+networks:
+  orabank:

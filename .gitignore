@@ -6,6 +6,7 @@ devops/sonarqube/.env
 
 # cookies / sessions locales de test
 cookies.txt
+.env
 .idea/
 *.zip
 mohamed_tasks.txt
