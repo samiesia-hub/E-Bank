@@ -30,6 +30,8 @@
 	<properties>
 		<java.version>21</java.version>
 		<jjwt.version>0.12.6</jjwt.version>
+		<!-- Couverture de tests consommee par SonarQube (rapport XML). -->
+		<jacoco.version>0.8.16</jacoco.version>
 		<!-- springdoc 3.x : seule ligne compatible Spring Boot 4.1.x -->
 		<springdoc.version>3.2.0</springdoc.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -131,6 +133,28 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- JaCoCo : "mvn test" produit pro/target/site/jacoco/jacoco.xml,
+			     lu par SonarQube (sonar.coverage.jacoco.xmlReportPaths). -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

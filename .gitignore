@@ -1,6 +1,13 @@
 
+# SonarQube : fichiers de travail du scanner et secrets locaux
+.scannerwork/
+**/coverage/
+devops/sonarqube/.env
+
 # cookies / sessions locales de test
 cookies.txt
 .idea/
 *.zip
 mohamed_tasks.txt
+*.pdf
+tasks.md
