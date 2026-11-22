@@ -1,6 +1,7 @@
 # Qualité du code — SonarQube
 
-**Responsable : Membre 2 (Mohamed) — branche `feature/sonarqube`.**
+**Responsable : Membre 2 (Mohamed).** Travail sur la branche `mbenboua`, destinée à
+`main` (le PDF prévoit la branche `feature/sonarqube`).
 
 Analyse statique des deux applications du dépôt (backend Spring Boot Java 21 et
 frontend Next.js/TypeScript), avec les rapports de couverture fournis par les
@@ -126,16 +127,31 @@ Depuis SonarQube 2025.3 (mode MQR), bugs, vulnérabilités et code smells sont
 regroupés dans la métrique `violations` : `new_violations` porte le critère
 « aucun bug ni vulnérabilité nouvelle », `violations` le contrôle global.
 
-Les seuils projet sont des **planchers de départ** calibrés sur l'existant
-(couverture mesurée 56,6 %, duplication 0 %, 4 anomalies). Quand les tests
-frontend de Soukayna produiront `coverage/lcov.info`, la couverture globale
-montera : relever alors `coverage` à 80 % et ajouter une condition
-`new_coverage ≥ 80 %` sur le code nouveau.
+Ces seuils sont des **objectifs du projet** : un `coverage` sous 50 % ou plus de
+10 `violations` font échouer le gate. Quand les tests frontend de Soukayna
+produiront `coverage/lcov.info`, la couverture globale montera : viser alors
+80 % et ajouter une condition `new_coverage ≥ 80 %` sur le code nouveau.
 
-État mesuré après la mise en place : statut **OK** (`coverage` 56,6 % ≥ 50,
-`violations` 4 ≤ 10, duplication 0 % ≤ 5, `new_violations` 0). L'interface
-marque ce gate « non conforme Clean as You Code » parce qu'il mélange seuils
-projet et seuil sur le code nouveau : c'est volontaire (plancher global +
+**État mesuré** (analyse du 22/11/2026, `main` fusionnée, 13 408 lignes,
+215 fichiers, backend + frontend) : statut **ERROR**.
+
+| Métrique | Mesuré | Seuil | Verdict |
+| --- | --- | --- | --- |
+| `coverage` | 41,9 % | ≥ 50 % | ❌ échec |
+| `violations` | 11 (8 bugs, 1 vulnérabilité, 2 code smells) | ≤ 10 | ❌ échec |
+| `duplicated_lines_density` | 0 % | ≤ 5 % | ✅ |
+| `new_violations` | 0 | 0 | ✅ |
+
+La chute de couverture (56,6 % avant fusion → 41,9 % après) vient du code
+arrivé avec `main` (tableau de bord admin, virements, KYC, tickets, support) qui
+n'est pas encore couvert. Deux issues : compléter les tests backend/frontend
+(objectif du projet), ou abaisser temporairement les seuils au mesuré
+(`coverage` 40 %, `violations` 15) dans `quality-gate.sh` pour une démo. Tant que
+le gate est en ERROR, la pipeline Jenkins doit s'arrêter à l'étape 5 : c'est le
+comportement attendu et décrit au PDF, pas une panne.
+
+L'interface marque ce gate « non conforme Clean as You Code » parce qu'il mélange
+seuils projet et seuil sur le code nouveau : c'est volontaire (plancher global +
 verrou sur le nouveau code).
 
 La période de code nouveau ne produit pas encore de lignes « nouvelles » : le
@@ -225,7 +241,7 @@ uniquement `ebank-sonar-data`, `ebank-sonar-logs`, `ebank-sonar-extensions` et
       `analyze.sh` affiche son statut et sort en erreur s'il échoue.
 - [x] Backend **et** frontend analysés : `sonar.sources` couvre
       `pro/src/main/java` et `e-bank-frontend/src`.
-- [x] Couverture backend intégrée (JaCoCo, 56,6 % mesurés) ; le chemin lcov
+- [x] Couverture backend intégrée (JaCoCo, 41,9 % mesurés sur `main` fusionnée) ; le chemin lcov
       frontend est déjà configuré, le rapport sera produit par les tests frontend.
 - [x] URL, clé projet et procédure de token documentées ci-dessus ; un token
       local (compte admin) est rangé dans `devops/sonarqube/.env`, non versionné.
