@@ -11,12 +11,15 @@ import com.SecBank.pro.Models.Enums.StatutTransaction;
 import com.SecBank.pro.Repositories.Client.BeneficiaireRepository;
 import com.SecBank.pro.Repositories.Client.CompteBancaireRepository;
 import com.SecBank.pro.Repositories.Client.VirementRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +28,8 @@ import java.util.Locale;
 
 @Service
 public class VirementServiceImpl implements VirementService {
+
+    private static final Logger log = LoggerFactory.getLogger(VirementServiceImpl.class);
 
     private final CompteBancaireRepository compteRepository;
     private final BeneficiaireRepository beneficiaireRepository;
@@ -49,6 +54,13 @@ public class VirementServiceImpl implements VirementService {
             BigDecimal montant,
             String motif
     ) {
+        log.info(
+                "Demande de virement reçue : compteSourceId={}, beneficiaireId={}, montant={}",
+                compteSourceId,
+                beneficiaireId,
+                montant
+        );
+
         verifierMontant(montant);
 
         CompteBancaire compteSource = compteRepository.findById(compteSourceId)
@@ -97,6 +109,12 @@ public class VirementServiceImpl implements VirementService {
             BigDecimal montant,
             String motif
     ) {
+        log.info(
+                "Demande de virement vers compte reçue : compteSourceId={}, montant={}",
+                compteSourceId,
+                montant
+        );
+
         verifierMontant(montant);
 
         String identifiant = normaliserIdentifiant(numeroCompteBeneficiaire);
@@ -125,8 +143,8 @@ public class VirementServiceImpl implements VirementService {
         String nomBeneficiaire = compteDestinataire.getClient() == null
                 || compteDestinataire.getClient().getNom() == null
                 || compteDestinataire.getClient().getNom().isBlank()
-                        ? "Beneficiaire"
-                        : compteDestinataire.getClient().getNom().trim();
+                ? "Beneficiaire"
+                : compteDestinataire.getClient().getNom().trim();
 
         return executerVirement(
                 compteSource,
@@ -147,6 +165,10 @@ public class VirementServiceImpl implements VirementService {
         verifierCompteActif(compteDestinataire, "destinataire");
 
         if (compteSource.getId().equals(compteDestinataire.getId())) {
+            log.warn(
+                    "Virement refusé : le compte source et le compte destinataire sont identiques"
+            );
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Le compte source et le compte destinataire doivent être différents"
@@ -162,6 +184,12 @@ public class VirementServiceImpl implements VirementService {
         );
 
         if (debitEffectue != 1) {
+            log.warn(
+                    "Virement refusé : solde insuffisant, compteSourceId={}, montant={}",
+                    compteSource.getId(),
+                    montant
+            );
+
             throw new InsufficientFundsException(
                     "Solde insuffisant pour effectuer ce virement"
             );
@@ -174,6 +202,10 @@ public class VirementServiceImpl implements VirementService {
         );
 
         if (creditEffectue != 1) {
+            log.error(
+                    "Virement annulé : impossible de créditer le compte destinataire"
+            );
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Le compte destinataire n'est plus actif"
@@ -222,7 +254,15 @@ public class VirementServiceImpl implements VirementService {
 
         virementRepository.save(ligneCredit);
 
-        return virementRepository.save(debitSauvegarde);
+        Virement resultat = virementRepository.save(debitSauvegarde);
+
+        log.info(
+                "Virement exécuté avec succès : reference={}, montant={}",
+                resultat.getReference(),
+                montant
+        );
+
+        return resultat;
     }
 
     @Override
@@ -245,34 +285,38 @@ public class VirementServiceImpl implements VirementService {
             throw new ResourceNotFoundException("Reçu de virement introuvable");
         }
 
+        log.info("Reçu de virement consulté : reference={}", referenceNormalisee);
+
         return virement;
     }
-@Override
-@Transactional(readOnly = true)
-public Page<Virement> consulterHistorique(
-        String emailClient,
-        LocalDate dateDebut,
-        LocalDate dateFin,
-        StatutTransaction statut,
-        Pageable pageable
-) {
-    LocalDateTime debut = dateDebut != null
-            ? dateDebut.atStartOfDay()
-            : LocalDate.of(1970, 1, 1).atStartOfDay();
 
-    LocalDateTime finExclusive = dateFin != null
-            ? dateFin.plusDays(1).atStartOfDay()
-            : LocalDate.now().plusDays(1).atStartOfDay();
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Virement> consulterHistorique(
+            String emailClient,
+            LocalDate dateDebut,
+            LocalDate dateFin,
+            StatutTransaction statut,
+            Pageable pageable
+    ) {
+        LocalDateTime debut = dateDebut != null
+                ? dateDebut.atStartOfDay()
+                : LocalDate.of(1970, 1, 1).atStartOfDay();
 
-    return virementRepository.rechercherHistoriqueDuClient(
-            emailClient,
-            SensTransaction.DEBIT,
-            debut,
-            finExclusive,
-            statut,
-            pageable
-    );
-}
+        LocalDateTime finExclusive = dateFin != null
+                ? dateFin.plusDays(1).atStartOfDay()
+                : LocalDate.now().plusDays(1).atStartOfDay();
+
+        return virementRepository.rechercherHistoriqueDuClient(
+                emailClient,
+                SensTransaction.DEBIT,
+                debut,
+                finExclusive,
+                statut,
+                pageable
+        );
+    }
+
     private static String genererReference(
             LocalDateTime date,
             Long identifiant
@@ -304,8 +348,8 @@ public Page<Virement> consulterHistorique(
     ) {
         if (compte.getClient() == null
                 || !emailClient.equalsIgnoreCase(
-                        compte.getClient().getEmail()
-                )) {
+                compte.getClient().getEmail()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Ce virement ne vous appartient pas"
@@ -319,8 +363,8 @@ public Page<Virement> consulterHistorique(
     ) {
         if (beneficiaire.getClient() == null
                 || !emailClient.equalsIgnoreCase(
-                        beneficiaire.getClient().getEmail()
-                )) {
+                beneficiaire.getClient().getEmail()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Ce bénéficiaire ne vous appartient pas"
@@ -347,8 +391,8 @@ public Page<Virement> consulterHistorique(
         if (source.getDevise() != null
                 && destination.getDevise() != null
                 && !source.getDevise().equalsIgnoreCase(
-                        destination.getDevise()
-                )) {
+                destination.getDevise()
+        )) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Les deux comptes doivent avoir la même devise"
@@ -356,10 +400,6 @@ public Page<Virement> consulterHistorique(
         }
     }
 
-    /**
-     * Normalise un RIB, un numero de compte ou un IBAN saisi par l'utilisateur :
-     * espaces et tirets retires, majuscules pour l'IBAN.
-     */
     private static String normaliserIdentifiant(String identifiant) {
         if (identifiant == null) {
             return "";

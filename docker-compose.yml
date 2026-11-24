@@ -24,7 +24,7 @@ services:
       dockerfile: ../docker/backend/Dockerfile
     restart: unless-stopped
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: prod,monitoring
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-ebank}
       DB_USER: ${POSTGRES_USER:-ebank}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-ebank}
@@ -68,8 +68,37 @@ services:
     networks:
       - orabank
 
-  # --- Qualite du code (Membre 2 - Mohamed) -------------------------------
-  # Base dediee a SonarQube : ne pas melanger avec la base applicative "db".
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - orabank
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - orabank
+
+  # --- Qualité du code (Membre 2 - Mohamed) ---
   sonar-db:
     image: postgres:16-alpine
     container_name: ebank-sonar-db
@@ -104,16 +133,12 @@ services:
       - ebank-sonar-logs:/opt/sonarqube/logs
       - ebank-sonar-extensions:/opt/sonarqube/extensions
     healthcheck:
-      # Sonde TCP (bash est toujours present dans l'image) ; l'etat reel du
-      # serveur est verifie via /api/system/status par analyze.sh.
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000'"]
       interval: 15s
       timeout: 5s
       retries: 40
       start_period: 90s
 
-  # Scanner utilise par devops/sonarqube/analyze.sh (profil "quality" :
-  # "docker compose up -d" ne le demarre pas).
   sonar-scanner:
     image: ${SONAR_SCANNER_IMAGE:-sonarsource/sonar-scanner-cli:latest}
     profiles: ["quality"]
@@ -128,6 +153,8 @@ services:
 
 volumes:
   ebank-db-data:
+  prometheus-data:
+  grafana-data:
   ebank-sonar-db-data:
   ebank-sonar-data:
   ebank-sonar-logs:
