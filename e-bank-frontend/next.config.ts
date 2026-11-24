@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Masque l'indicateur de développement Next.js (le rond "N" en bas à gauche).
   devIndicators: false,
 

@@ -141,8 +141,9 @@ Pour chaque compte, **le solde est exactement la somme de son historique**
 
 ### Mise en place
 
-Le schéma est créé par Hibernate au premier démarrage du backend : lancez-le une fois
-(`cd pro && ./mvnw spring-boot:run`), puis arrêtez-le et chargez le seed.
+Le schéma est créé par Flyway au premier démarrage du backend (migrations
+`pro/src/main/resources/db/migration`) : lancez-le une fois (`cd pro && ./mvnw spring-boot:run`),
+puis chargez le seed (l'application peut rester lancée).
 
 ```bash
 # rend les scripts accessibles dans le conteneur
@@ -174,8 +175,8 @@ docker compose exec -T db psql -U ebank -d ebank -v ON_ERROR_STOP=1 \
 > ⚠️ **Données de test non sécurisées.** Noms, numéros de comptes, RIB et téléphones sont
 > entièrement synthétiques, et les mots de passe ci-dessus sont publics (seuls leurs hashes
 > BCrypt figurent dans le script). Ils ne doivent jamais être réutilisés pour un compte réel
-> ni conservés sur une base exposée. Les scripts ne sont jamais exécutés automatiquement par
-> l'application : `ddl-auto` ne crée que le schéma.
+> ni conservés sur une base exposée. Les scripts de démo ne sont jamais exécutés automatiquement :
+> au démarrage, Flyway ne crée que le schéma et `ddl-auto=validate` se contente de le vérifier.
 
 ### Vérifier la cohérence
 
@@ -265,6 +266,21 @@ docker compose exec -T db psql -U ebank -d ebank -f /tmp/ebank-demo/check-schema
 ```
 
 Rapport détaillé : `pro/docs/verification-schema.md`.
+
+## 15. Qualité du code (SonarQube)
+
+L'analyse statique du backend et du frontend est centralisée à la racine du dépôt
+(`sonar-project.properties`) et pilotée par un serveur SonarQube lancé avec Docker Compose.
+
+```bash
+docker compose up -d sonar-db sonarqube     # http://localhost:9000
+export SONAR_TOKEN=...                      # My Account > Security
+devops/sonarqube/analyze.sh                 # tests + JaCoCo + scanner + Quality Gate
+```
+
+`mvn test` génère désormais `pro/target/site/jacoco/jacoco.xml` (plugin JaCoCo), rapport de
+couverture consommé par SonarQube. Les seuils du Quality Gate et l'intégration Jenkins sont
+décrits dans `devops/sonarqube/README.md`.
 
 ## Auteur
 

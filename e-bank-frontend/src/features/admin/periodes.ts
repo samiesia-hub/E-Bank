@@ -7,7 +7,9 @@ export const PERIODES: { valeur: Periode; label: string }[] = [
     { valeur: "30j", label: "30 jours" },
 ];
 
-export const PERIODE_PAR_DEFAUT: Periode = "7j";
+// 30 jours par defaut : la vue d ensemble doit montrer les operations des
+// dernieres semaines, pas une page vide le lundi matin.
+export const PERIODE_PAR_DEFAUT: Periode = "30j";
 
 // L'URL peut contenir n'importe quoi (?periode=abc) : on valide avant d'utiliser.
 export function lirePeriode(brut: string | string[] | undefined): Periode {

@@ -87,6 +87,81 @@ public class VirementServiceImpl implements VirementService {
                         "Compte destinataire introuvable"
                 ));
 
+        String nomBeneficiaire = (
+                beneficiaire.getNom() + " " + beneficiaire.getPrenom()
+        ).trim();
+
+        return executerVirement(
+                compteSource,
+                compteDestinataire,
+                nomBeneficiaire,
+                montant,
+                motif
+        );
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Virement effectuerVirementVersCompte(
+            String emailClient,
+            Long compteSourceId,
+            String numeroCompteBeneficiaire,
+            BigDecimal montant,
+            String motif
+    ) {
+        log.info(
+                "Demande de virement vers compte reçue : compteSourceId={}, montant={}",
+                compteSourceId,
+                montant
+        );
+
+        verifierMontant(montant);
+
+        String identifiant = normaliserIdentifiant(numeroCompteBeneficiaire);
+
+        if (identifiant.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le RIB ou le numero de compte du beneficiaire est obligatoire"
+            );
+        }
+
+        CompteBancaire compteSource = compteRepository.findById(compteSourceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Compte source introuvable"
+                ));
+
+        verifierProprietaire(compteSource, emailClient);
+        verifierCompteActif(compteSource, "source");
+
+        CompteBancaire compteDestinataire = compteRepository
+                .findByNumeroCompteOrRib(identifiant, identifiant)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aucun compte Orabank ne correspond a ce RIB ou numero de compte"
+                ));
+
+        String nomBeneficiaire = compteDestinataire.getClient() == null
+                || compteDestinataire.getClient().getNom() == null
+                || compteDestinataire.getClient().getNom().isBlank()
+                ? "Beneficiaire"
+                : compteDestinataire.getClient().getNom().trim();
+
+        return executerVirement(
+                compteSource,
+                compteDestinataire,
+                nomBeneficiaire,
+                montant,
+                motif
+        );
+    }
+
+    private Virement executerVirement(
+            CompteBancaire compteSource,
+            CompteBancaire compteDestinataire,
+            String nomBeneficiaire,
+            BigDecimal montant,
+            String motif
+    ) {
         verifierCompteActif(compteDestinataire, "destinataire");
 
         if (compteSource.getId().equals(compteDestinataire.getId())) {
@@ -111,7 +186,7 @@ public class VirementServiceImpl implements VirementService {
         if (debitEffectue != 1) {
             log.warn(
                     "Virement refusé : solde insuffisant, compteSourceId={}, montant={}",
-                    compteSourceId,
+                    compteSource.getId(),
                     montant
             );
 
@@ -147,10 +222,6 @@ public class VirementServiceImpl implements VirementService {
 
         LocalDateTime maintenant = LocalDateTime.now();
         String motifValide = nettoyerMotif(motif);
-
-        String nomBeneficiaire = (
-                beneficiaire.getNom() + " " + beneficiaire.getPrenom()
-        ).trim();
 
         Virement ligneDebit = new Virement();
         ligneDebit.setCompte(sourcePourTrace);
@@ -327,6 +398,17 @@ public class VirementServiceImpl implements VirementService {
                     "Les deux comptes doivent avoir la même devise"
             );
         }
+    }
+
+    private static String normaliserIdentifiant(String identifiant) {
+        if (identifiant == null) {
+            return "";
+        }
+
+        return identifiant
+                .replaceAll("[\\s-]", "")
+                .trim()
+                .toUpperCase(Locale.ROOT);
     }
 
     private static String nettoyerMotif(String motif) {

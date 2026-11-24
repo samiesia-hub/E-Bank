@@ -50,14 +50,23 @@ export function messageErreurApi(erreur: unknown): string {
   if (erreur instanceof ErreurApi) {
     try {
       const corps: unknown = JSON.parse(erreur.message);
-      if (corps && typeof corps === "object" && "message" in corps) {
-        const message = (corps as { message?: unknown }).message;
-        if (typeof message === "string" && message.length > 0) return message;
+      if (corps && typeof corps === "object") {
+        // Nos refus metier : {"message": "..."}
+        // Refus Spring (ProblemDetail) : {"title": "...", "detail": "..."}
+        for (const cle of ["message", "detail", "title"]) {
+          if (cle in corps) {
+            const texte = (corps as Record<string, unknown>)[cle];
+            if (typeof texte === "string" && texte.length > 0) return texte;
+          }
+        }
       }
     } catch {
       // Corps non JSON : on garde le texte brut.
     }
-    return erreur.message;
+    if (erreur.status === 403) return "Vous n'avez pas accès à cette opération.";
+    const brut = erreur.message?.trim();
+    if (brut && !brut.startsWith("{") && !brut.startsWith("<")) return brut;
+    return `Erreur API (${erreur.status})`;
   }
   return erreur instanceof Error ? erreur.message : "Une erreur est survenue, veuillez réessayer.";
 }

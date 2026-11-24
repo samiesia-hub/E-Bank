@@ -9,7 +9,7 @@ Le dépôt contient les deux applications et la base de données de développeme
 |---|---|---|
 | `e-bank-frontend/` | Interface web | Next.js 16 (App Router), TypeScript, Tailwind v4 |
 | `pro/` | API REST | Spring Boot 4.1.1, Java 21, Spring Security, JPA |
-| `docker-compose.yml` | Base PostgreSQL de dev | PostgreSQL 16 |
+| `docker-compose.yml` | Application complète et base de données | Docker Compose |
 
 ---
 
@@ -60,7 +60,7 @@ Form, Zod, `jose` (vérification JWT dans `proxy.ts`).
 
 ```
 E-Bank/
-├── docker-compose.yml            # PostgreSQL de développement
+├── docker-compose.yml            # frontend, backend et PostgreSQL
 ├── screenshots/                  # captures des écrans
 ├── diagramme de classe.jpeg      # modèle de données
 │
@@ -98,7 +98,7 @@ Aucune installation de PostgreSQL n'est nécessaire : la base tourne dans un con
 ### 1) Base de données
 
 ```bash
-docker compose up -d
+docker compose up -d db     # pour exécuter seulement PostgreSQL en développement
 docker compose ps          # STATUS doit afficher (healthy)
 ```
 
@@ -218,19 +218,21 @@ et endpoints testés à la main.
 
 ## 10. Commandes Docker
 
+La conteneurisation complète et les ports sont décrits dans [`docker/README.md`](docker/README.md).
+
 ```bash
-docker compose up -d        # démarre PostgreSQL
-docker compose ps           # état (healthy)
-docker compose logs -f db   # journaux
-docker compose stop         # arrête, conserve les données
-docker compose down         # supprime le conteneur, conserve le volume
-docker compose down -v      # supprime aussi les données
+docker compose up -d --build  # démarre le site, l'API et PostgreSQL
+docker compose ps             # état des trois services
+docker compose logs -f        # journaux
+docker compose stop           # arrête, conserve les données
+docker compose down           # supprime les conteneurs, conserve le volume
+docker compose down -v        # supprime aussi les données
 ```
 
 Se connecter à la base :
 
 ```bash
-docker exec -it ebank-db psql -U ebank -d ebank
+docker compose exec db psql -U ebank -d ebank
 ```
 
 ## 11. Dépannage
