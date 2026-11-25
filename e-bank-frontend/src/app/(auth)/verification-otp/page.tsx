@@ -2,7 +2,7 @@
 
 // Vérification OTP — étape 2 du parcours : code reçu par e-mail + nouveau mot de passe.
 // POST /api/auth/reset-password { email, code, nouveauMotDePasse }.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff, KeyRound } from "lucide-react";
@@ -15,10 +15,7 @@ import {
 
 export default function PageVerificationOtp() {
   const router = useRouter();
-  const [email, setEmail] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem(CLE_EMAIL_REINIT) ?? "";
-  });
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -26,6 +23,11 @@ export default function PageVerificationOtp() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
   const [reussi, setReussi] = useState(false);
+
+  useEffect(() => {
+    const enregistre = sessionStorage.getItem(CLE_EMAIL_REINIT);
+    if (enregistre) setEmail(enregistre);
+  }, []);
 
   async function soumettre(evenement: React.FormEvent) {
     evenement.preventDefault();

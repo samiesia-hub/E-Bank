@@ -9,7 +9,6 @@ import { ChampSaisie } from "@/components/interface/ChampSaisie";
 import { TableauDonnees, type DataTableColumn } from "@/components/interface/TableauDonnees";
 import { messageErreurApi } from "@/lib/client-api";
 import { formaterDateHeure, formaterMontant } from "@/lib/formatage";
-import { useRouter } from "next/navigation";
 import {
   exporterTransactionsCsv,
   rechercherTransactionsAdmin,
@@ -45,8 +44,7 @@ export default function PageTransactionsAdmin() {
   const [exportEnCours, setExportEnCours] = useState(false);
   const [erreurExport, setErreurExport] = useState<string | null>(null);
   const [succesExport, setSuccesExport] = useState<string | null>(null);
-const router = useRouter();
-router.push("/login");
+
   const transactions = useQuery({
     queryKey: ["admin", "transactions", filtres, page],
     queryFn: () => rechercherTransactionsAdmin({ ...filtres, page, size: TAILLE_PAGE }),
