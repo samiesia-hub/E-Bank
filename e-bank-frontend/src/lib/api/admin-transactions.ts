@@ -43,6 +43,7 @@ export interface FiltresTransactions {
 
 function parametres(filtres: FiltresTransactions): URLSearchParams {
   const params = new URLSearchParams();
+
   if (filtres.clientId != null) params.set("clientId", String(filtres.clientId));
   if (filtres.compteId != null) params.set("compteId", String(filtres.compteId));
   if (filtres.du) params.set("du", filtres.du);
@@ -50,6 +51,7 @@ function parametres(filtres: FiltresTransactions): URLSearchParams {
   if (filtres.sens) params.set("sens", filtres.sens);
   if (filtres.page != null) params.set("page", String(filtres.page));
   if (filtres.size != null) params.set("size", String(filtres.size));
+
   return params;
 }
 
@@ -59,42 +61,64 @@ export function rechercherTransactionsAdmin(
 ): Promise<PageTransactionsAdmin> {
   const params = parametres(filtres);
   const requete = params.size > 0 ? `?${params}` : "";
+
   return appelApi<PageTransactionsAdmin>(`/admin/transactions${requete}`);
 }
 
 /**
- * Télécharge le CSV des transactions correspondant aux filtres affichés
- * (sans pagination : l'export couvre tout le résultat filtré).
- * On passe par fetch pour garder le cookie httpOnly et afficher les erreurs 400/403.
+ * Télécharge le CSV des transactions correspondant aux filtres affichés.
+ * L'export couvre tout le résultat filtré, sans pagination.
  */
-export async function exporterTransactionsCsv(filtres: FiltresTransactions = {}): Promise<string> {
-  const params = parametres({ ...filtres, page: undefined, size: undefined });
-  const requete = params.size > 0 ? `?${params}` : "";
-  const res = await fetch(`${BASE_API}/admin/transactions/export-csv${requete}`, {
-    credentials: "include",
+export async function exporterTransactionsCsv(
+  filtres: FiltresTransactions = {}
+): Promise<string> {
+  const params = parametres({
+    ...filtres,
+    page: undefined,
+    size: undefined,
   });
 
-  if (res.status === 401 && typeof window !== "undefined") {
-    window.location.assign("/connexion");
-    throw new ErreurApi(401, "Session expirée — veuillez vous reconnecter.");
+  const requete = params.size > 0 ? `?${params}` : "";
+
+  const res = await fetch(
+    `${BASE_API}/admin/transactions/export-csv${requete}`,
+    {
+      credentials: "include",
+    }
+  );
+
+  if (res.status === 401) {
+    throw new ErreurApi(
+      401,
+      "Session expirée — veuillez vous reconnecter."
+    );
   }
 
   if (!res.ok) {
     const corps = await res.text().catch(() => "");
-    throw new ErreurApi(res.status, corps || `Erreur API (${res.status})`);
+    throw new ErreurApi(
+      res.status,
+      corps || `Erreur API (${res.status})`
+    );
   }
 
-  const nomFichier = nomDepuisDisposition(res.headers.get("content-disposition"));
+  const nomFichier = nomDepuisDisposition(
+    res.headers.get("content-disposition")
+  );
+
   const blob = await res.blob();
 
   if (typeof window !== "undefined") {
     const url = URL.createObjectURL(blob);
     const lien = document.createElement("a");
+
     lien.href = url;
     lien.download = nomFichier;
+
     document.body.appendChild(lien);
     lien.click();
     lien.remove();
+
     URL.revokeObjectURL(url);
   }
 
@@ -104,8 +128,13 @@ export async function exporterTransactionsCsv(filtres: FiltresTransactions = {})
 /** "attachment; filename=transactions-2026-11-06.csv" -> nom de fichier. */
 function nomDepuisDisposition(disposition: string | null): string {
   if (!disposition) return "transactions.csv";
-  const capture = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+
+  const capture = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(
+    disposition
+  );
+
   if (!capture) return "transactions.csv";
+
   try {
     return decodeURIComponent(capture[1]);
   } catch {

@@ -3,20 +3,27 @@
  * Session is an httpOnly cookie — never localStorage (XSS-safe).
  * All fetches send cookies (credentials: "include").
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
 
 /** Base URL for calls that must not use the shared 401 redirect (login, register). */
 export const BASE_API = BASE_URL;
 
 export class ErreurApi extends Error {
   status: number;
+
   constructor(status: number, message: string) {
     super(message);
+    this.name = "ErreurApi";
     this.status = status;
   }
 }
 
-export async function appelApi<T>(path: string, init?: RequestInit): Promise<T> {
+export async function appelApi<T>(
+  path: string,
+  init?: RequestInit
+): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     credentials: "include",
@@ -26,50 +33,66 @@ export async function appelApi<T>(path: string, init?: RequestInit): Promise<T> 
     },
   });
 
-  if (res.status === 401 && typeof window !== "undefined") {
-    // Session expired: hard navigation so httpOnly cookie flow restarts at login.
-    // (next/router not available in this plain helper — keep full reload.)
-    window.location.assign("/connexion");
-    throw new ErreurApi(401, "Session expirée — veuillez vous reconnecter.");
-  }
-
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new ErreurApi(res.status, body || `Erreur API (${res.status})`);
+
+    throw new ErreurApi(
+      res.status,
+      res.status === 401
+        ? "Session expirée — veuillez vous reconnecter."
+        : body || `Erreur API (${res.status})`
+    );
   }
 
   if (res.status === 204) return undefined as T;
+
   return (await res.json()) as T;
 }
 
 /**
- * Message lisible d'une erreur API : le backend renvoie {"message": "..."}
- * pour les refus metier, appelApi expose le corps brut.
+ * Message lisible d'une erreur API.
+ * Le backend renvoie {"message": "..."} pour les refus métier.
  */
 export function messageErreurApi(erreur: unknown): string {
   if (erreur instanceof ErreurApi) {
     try {
       const corps: unknown = JSON.parse(erreur.message);
+
       if (corps && typeof corps === "object") {
-        // Nos refus metier : {"message": "..."}
-        // Refus Spring (ProblemDetail) : {"title": "...", "detail": "..."}
         for (const cle of ["message", "detail", "title"]) {
           if (cle in corps) {
             const texte = (corps as Record<string, unknown>)[cle];
-            if (typeof texte === "string" && texte.length > 0) return texte;
+
+            if (typeof texte === "string" && texte.length > 0) {
+              return texte;
+            }
           }
         }
       }
     } catch {
       // Corps non JSON : on garde le texte brut.
     }
-    if (erreur.status === 403) return "Vous n'avez pas accès à cette opération.";
+
+    if (erreur.status === 403) {
+      return "Vous n'avez pas accès à cette opération.";
+    }
+
     const brut = erreur.message?.trim();
-    if (brut && !brut.startsWith("{") && !brut.startsWith("<")) return brut;
+
+    if (brut && !brut.startsWith("{") && !brut.startsWith("<")) {
+      return brut;
+    }
+
     return `Erreur API (${erreur.status})`;
   }
-  return erreur instanceof Error ? erreur.message : "Une erreur est survenue, veuillez réessayer.";
+
+  return erreur instanceof Error
+    ? erreur.message
+    : "Une erreur est survenue, veuillez réessayer.";
 }
 
 // Alias anglais pour compatibilité
-export { ErreurApi as ApiError, appelApi as api };
+export {
+  ErreurApi as ApiError,
+  appelApi as api,
+};
