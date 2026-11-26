@@ -12,6 +12,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
+# Utiliser le projet Docker Compose existant
+export COMPOSE_PROJECT_NAME=projetdevops
+
 # Token : variable d'environnement ou fichier local non versionne.
 if [[ -z "${SONAR_TOKEN:-}" && -f devops/sonarqube/.env ]]; then
   set -a
