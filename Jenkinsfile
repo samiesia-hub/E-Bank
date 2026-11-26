@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         jdk    'jdk21'
-        nodejs 'node20'
+        nodejs 'NodeJS-22'
     }
 
     options {
@@ -13,12 +13,9 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
-    environment {
-        SONAR_HOST_URL = 'http://sonarqube:9000'
-    }
-
     stages {
 
+        // 1. CHECKOUT
         stage('Checkout') {
             steps {
                 echo 'Recuperation du projet depuis GitHub'
@@ -26,6 +23,7 @@ pipeline {
             }
         }
 
+        // 2. TESTS (backend et frontend en parallele)
         stage('Tests') {
             parallel {
 
@@ -33,7 +31,7 @@ pipeline {
                     steps {
                         dir('pro') {
                             sh 'chmod +x mvnw'
-                            sh './mvnw -B test'
+                            sh './mvnw -B clean test'
                         }
                     }
                     post {
@@ -44,13 +42,12 @@ pipeline {
                     }
                 }
 
-                stage('Frontend - Vitest') {
+                stage('Frontend - Lint + Vitest') {
                     steps {
                         dir('e-bank-frontend') {
                             sh 'npm ci'
                             sh 'npm run lint'
                             sh 'npm run test:ci'
-                            sh 'npm run build'
                         }
                     }
                     post {
@@ -63,15 +60,40 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo 'Analyse de qualite du code'
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh 'bash devops/sonarqube/analyze.sh'
+        // 3. BUILD (apres les tests, pour ne pas perdre le rapport JaCoCo)
+        stage('Build') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        dir('pro') {
+                            // pas de "clean" : on garde target/site/jacoco et target/classes
+                            sh './mvnw -B package -DskipTests'
+                        }
+                    }
+                }
+                stage('Build Frontend') {
+                    steps {
+                        dir('e-bank-frontend') {
+                            sh 'npm run build'
+                        }
+                    }
                 }
             }
         }
 
+        // 4. SONARQUBE
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Analyse de qualite du code'
+                withSonarQubeEnv('sonarqube') {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh 'bash devops/sonarqube/analyze.sh'
+                    }
+                }
+            }
+        }
+
+        // 5. QUALITY GATE
         stage('Quality Gate') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
@@ -80,6 +102,7 @@ pipeline {
             }
         }
 
+        // 6. DOCKER BUILD
         stage('Docker Build') {
             steps {
                 echo 'Construction des images Docker'
@@ -87,6 +110,7 @@ pipeline {
             }
         }
 
+        // 7. DEPLOY (uniquement sur main)
         stage('Deploy') {
             when { branch 'main' }
             steps {
@@ -95,17 +119,21 @@ pipeline {
             }
         }
 
+        // 8. SMOKE TEST (uniquement sur main)
         stage('Smoke Test') {
             when { branch 'main' }
             steps {
                 sh '''
-                  for i in $(seq 1 20); do
-                    if curl -sf http://host.docker.internal:8081/actuator/health | grep -q UP; then
-                      echo "Application UP"; exit 0
-                    fi
-                    echo "Attente... ($i/20)"; sleep 5
-                  done
-                  echo "Healthcheck en echec"; exit 1
+                    for i in $(seq 1 20); do
+                        if curl -sf http://host.docker.internal:8081/actuator/health | grep -q UP; then
+                            echo "Application UP"
+                            exit 0
+                        fi
+                        echo "Attente... ($i/20)"
+                        sleep 5
+                    done
+                    echo "Healthcheck en echec"
+                    exit 1
                 '''
             }
         }
