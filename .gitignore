@@ -12,3 +12,6 @@ cookies.txt
 mohamed_tasks.txt
 *.pdf
 tasks.md
+
+e-bank-frontend/reports/
+e-bank-frontend/coverage/
