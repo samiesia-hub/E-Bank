@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     tools {
-
         nodejs 'NodeJS-22'
     }
 
@@ -18,7 +17,6 @@ pipeline {
         // 1. CHECKOUT
         stage('Checkout') {
             steps {
-                echo 'Recuperation du projet depuis GitHub'
                 checkout scm
             }
         }
@@ -26,7 +24,6 @@ pipeline {
         // 2. TESTS (backend et frontend en parallele)
         stage('Tests') {
             parallel {
-
                 stage('Backend - JUnit + JaCoCo') {
                     steps {
                         dir('pro') {
@@ -41,7 +38,6 @@ pipeline {
                         }
                     }
                 }
-
                 stage('Frontend - Lint + Vitest') {
                     steps {
                         dir('e-bank-frontend') {
@@ -60,13 +56,12 @@ pipeline {
             }
         }
 
-        // 3. BUILD (apres les tests, pour ne pas perdre le rapport JaCoCo)
+        // 3. BUILD (sans clean pour garder jacoco et target/classes)
         stage('Build') {
             parallel {
                 stage('Build Backend') {
                     steps {
                         dir('pro') {
-                            // pas de "clean" : on garde target/site/jacoco et target/classes
                             sh './mvnw -B package -DskipTests'
                         }
                     }
@@ -81,14 +76,25 @@ pipeline {
             }
         }
 
-        // 4. SONARQUBE
+        // 4. SONARQUBE (scanner installe dans Jenkins, sans Docker)
         stage('SonarQube Analysis') {
+            environment {
+                SCANNER_HOME = tool 'sonar-scanner'
+            }
             steps {
                 echo 'Analyse de qualite du code'
                 withSonarQubeEnv('sonarqube') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh 'bash devops/sonarqube/analyze.sh'
-                    }
+                    sh '''
+                      "$SCANNER_HOME/bin/sonar-scanner" \
+                        -Dsonar.projectKey=orabank \
+                        -Dsonar.projectName=Orabank \
+                        -Dsonar.sources=pro/src/main,e-bank-frontend/src \
+                        -Dsonar.tests=pro/src/test \
+                        -Dsonar.java.binaries=pro/target/classes \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=pro/target/site/jacoco/jacoco.xml \
+                        -Dsonar.javascript.lcov.reportPaths=e-bank-frontend/coverage/lcov.info \
+                        -Dsonar.exclusions=**/node_modules/**,**/*.test.*,**/.next/**
+                    '''
                 }
             }
         }
@@ -110,30 +116,41 @@ pipeline {
             }
         }
 
-        // 7. DEPLOY (uniquement sur main)
+        // 7. DEPLOY (main uniquement, sur la machine de deploiement)
         stage('Deploy') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { env.DEPLOY_ENABLED == 'true' }
+                }
+            }
             steps {
                 echo 'Deploiement de Orabank'
                 sh 'docker compose up -d --remove-orphans'
             }
         }
 
-        // 8. SMOKE TEST (uniquement sur main)
+        // 8. SMOKE TEST
         stage('Smoke Test') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { env.DEPLOY_ENABLED == 'true' }
+                }
+            }
             steps {
                 sh '''
-                    for i in $(seq 1 20); do
-                        if curl -sf http://host.docker.internal:8081/actuator/health | grep -q UP; then
-                            echo "Application UP"
-                            exit 0
-                        fi
-                        echo "Attente... ($i/20)"
-                        sleep 5
-                    done
-                    echo "Healthcheck en echec"
-                    exit 1
+                    check() {
+                      for i in $(seq 1 24); do
+                        if curl -sf "$1" > /dev/null; then echo "OK $1"; return 0; fi
+                        echo "Attente $1 ($i/24)"; sleep 5
+                      done
+                      echo "ECHEC $1"; return 1
+                    }
+                    check http://localhost:PORT_BACKEND/actuator/health
+                    check http://localhost:PORT_FRONTEND
+                    check http://localhost:PORT_PROMETHEUS/-/healthy
+                    check http://localhost:PORT_GRAFANA/api/health
                 '''
             }
         }
